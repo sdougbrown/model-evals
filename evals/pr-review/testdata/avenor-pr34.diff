@@ -1,0 +1,258 @@
+diff --git a/client/client.go b/client/client.go
+index bed3d66..a408e95 100644
+--- a/client/client.go
++++ b/client/client.go
+@@ -2,6 +2,7 @@ package client
+ 
+ import (
+ 	"bufio"
++	"context"
+ 	"encoding/json"
+ 	"fmt"
+ 	"net"
+@@ -292,6 +293,31 @@ func (c *Client) AnswerPermission(runtimeID, requestID, optionID string) error {
+ 	return c.Call("answer_permission", params, nil)
+ }
+ 
++// SubscribeRuntime returns a channel of events filtered to a specific runtime.
++// The caller must drain the channel. The channel closes when ctx is done or
++// the underlying event channel is closed. Calling SubscribeRuntime ensures the
++// readLoop is started.
++func (c *Client) SubscribeRuntime(ctx context.Context, runtimeID string) <-chan Event {
++	// Ensure readLoop is running (same as Events()).
++	c.eventOnce.Do(func() {
++		go c.readLoop()
++	})
++	out := make(chan Event, 256)
++	go func() {
++		defer close(out)
++		for evt := range c.eventCh {
++			if evt.RuntimeID == runtimeID {
++				select {
++				case out <- evt:
++				case <-ctx.Done():
++					return
++				}
++			}
++		}
++	}()
++	return out
++}
++
+ // List returns all active runtimes from the stable supervisor.
+ func (c *Client) List() ([]map[string]any, error) {
+ 	var result []map[string]any
+diff --git a/internal/runtime/pony/agent_tools.go b/internal/runtime/pony/agent_tools.go
+index 180e08f..879b50d 100644
+--- a/internal/runtime/pony/agent_tools.go
++++ b/internal/runtime/pony/agent_tools.go
+@@ -206,8 +206,10 @@ func (t *waitForDoneTool) Execute(ctx context.Context, workingDir string, args j
+ 	if input.SessionID == "" {
+ 		return "", fmt.Errorf("wait_for_done: session_id is required")
+ 	}
+-	if err := t.executor.WaitForDone(ctx, input.SessionID); err != nil {
++	result, err := t.executor.WaitForDone(ctx, input.SessionID)
++	if err != nil {
+ 		return "", fmt.Errorf("wait_for_done: %w", err)
+ 	}
+-	return "Child agent completed.", nil
++	return fmt.Sprintf("Agent %s completed (exit %d, %s). Output files: %v",
++		input.SessionID, result.ExitCode, result.StopReason, result.OutputFiles), nil
+ }
+diff --git a/internal/runtime/pony/config.go b/internal/runtime/pony/config.go
+index 58c98d2..ba0a27a 100644
+--- a/internal/runtime/pony/config.go
++++ b/internal/runtime/pony/config.go
+@@ -8,6 +8,7 @@ import (
+ 	"sort"
+ 
+ 	"github.com/sdougbrown/avenor/client"
++	"github.com/sdougbrown/avenor/internal/runtime"
+ 	"github.com/sdougbrown/avenor/internal/runtime/pony/tools"
+ )
+ 
+@@ -135,19 +136,21 @@ func (e *controlSocketExecutor) GetStatus(ctx context.Context, sessionID string)
+ 	return e.client.Status(sessionID)
+ }
+ 
+-func (e *controlSocketExecutor) WaitForDone(ctx context.Context, sessionID string) error {
+-	eventsCh := e.client.Events()
+-	for {
+-		select {
+-		case evt, ok := <-eventsCh:
+-			if !ok {
+-				return fmt.Errorf("event channel closed while waiting for session %s", sessionID)
++func (e *controlSocketExecutor) WaitForDone(ctx context.Context, sessionID string) (*runtime.AgentResult, error) {
++	sub := e.client.SubscribeRuntime(ctx, sessionID)
++	for evt := range sub {
++		if evt.Event == "session.end" {
++			stopReason, _ := evt.Raw["stop_reason"].(string)
++			exitCode := 0
++			if ec, ok := evt.Raw["exit_code"].(float64); ok {
++				exitCode = int(ec)
+ 			}
+-			if evt.Event == "session.end" && (evt.RuntimeID == sessionID || evt.SessionID == sessionID) {
+-				return nil
+-			}
+-		case <-ctx.Done():
+-			return ctx.Err()
++			return &runtime.AgentResult{
++				SessionID:  sessionID,
++				StopReason: stopReason,
++				ExitCode:   exitCode,
++			}, nil
+ 		}
+ 	}
++	return nil, ctx.Err()
+ }
+diff --git a/internal/runtime/pony/pony_test.go b/internal/runtime/pony/pony_test.go
+index f5f15e8..d08e08d 100644
+--- a/internal/runtime/pony/pony_test.go
++++ b/internal/runtime/pony/pony_test.go
+@@ -131,16 +131,20 @@ func (f *fakeExecutor) GetStatus(ctx context.Context, sessionID string) (map[str
+ 	return map[string]any{"phase": "running", "state": "active"}, nil
+ }
+ 
+-func (f *fakeExecutor) WaitForDone(ctx context.Context, sessionID string) error {
++func (f *fakeExecutor) WaitForDone(ctx context.Context, sessionID string) (*runtime.AgentResult, error) {
+ 	f.waitCalled++
+ 	if f.waitErr != nil {
+-		return f.waitErr
++		return nil, f.waitErr
+ 	}
+ 	if !f.waitDone {
+ 		<-ctx.Done()
+-		return ctx.Err()
++		return nil, ctx.Err()
+ 	}
+-	return nil
++	return &runtime.AgentResult{
++		SessionID:  sessionID,
++		StopReason: "stop",
++		ExitCode:   0,
++	}, nil
+ }
+ 
+ 
+@@ -1042,8 +1046,9 @@ func TestOrchestrationTools_waitForDone_immediate(t *testing.T) {
+ 	if err != nil {
+ 		t.Fatalf("unexpected error: %v", err)
+ 	}
+-	if result != "Child agent completed." {
+-		t.Errorf("result = %q, want %q", result, "Child agent completed.")
++	expected := "Agent child_1 completed (exit 0, stop). Output files: []"
++	if result != expected {
++		t.Errorf("result = %q, want %q", result, expected)
+ 	}
+ }
+ 
+diff --git a/internal/runtime/pony/provider.go b/internal/runtime/pony/provider.go
+index ea093a9..263fd6f 100644
+--- a/internal/runtime/pony/provider.go
++++ b/internal/runtime/pony/provider.go
+@@ -44,7 +44,7 @@ type OrchestratorExecutor interface {
+ 	SpawnAgent(ctx context.Context, params map[string]any) (sessionID string, err error)
+ 	SendPrompt(ctx context.Context, sessionID, prompt string) error
+ 	GetStatus(ctx context.Context, sessionID string) (map[string]any, error)
+-	WaitForDone(ctx context.Context, sessionID string) error
++	WaitForDone(ctx context.Context, sessionID string) (*runtime.AgentResult, error)
+ }
+ 
+ // Provider implements runtime.Provider for the pony backend.
+diff --git a/internal/runtime/provider.go b/internal/runtime/provider.go
+index f579c61..32c2b18 100644
+--- a/internal/runtime/provider.go
++++ b/internal/runtime/provider.go
+@@ -41,6 +41,14 @@ type PermissionResponse struct {
+ 	Message  string
+ }
+ 
++// AgentResult holds the result of a completed agent session.
++type AgentResult struct {
++	SessionID   string   `json:"session_id"`
++	StopReason  string   `json:"stop_reason"`
++	ExitCode    int      `json:"exit_code"`
++	OutputFiles []string `json:"output_files,omitempty"`
++}
++
+ // Capabilities describes what a runtime backend supports.
+ type Capabilities struct {
+ 	Backend             string
+diff --git a/internal/stable/supervisor.go b/internal/stable/supervisor.go
+index bfd8c9f..9fa9a68 100644
+--- a/internal/stable/supervisor.go
++++ b/internal/stable/supervisor.go
+@@ -46,6 +46,7 @@ type SpawnParams struct {
+ 	MaxRetries        int    `json:"max_retries,omitempty"`
+ 	LoopFile          string `json:"loop_file,omitempty"`
+ 	SessionID         string `json:"session_id,omitempty"`
++	ParentID          string `json:"parent_id,omitempty"` // runtime ID of the parent agent
+ }
+ 
+ type SpawnResult struct {
+@@ -58,6 +59,8 @@ type SpawnResult struct {
+ type childRuntime struct {
+ 	id               string
+ 	label            string
++	parentID         string               // runtime ID of the parent agent, empty for top-level
++	children         []string             // runtime IDs spawned by this runtime
+ 	provider         runtime.Provider
+ 	session          runtime.Session
+ 	eventWriter      cli.EventSink
+@@ -232,6 +235,16 @@ func (s *Supervisor) spawn(params SpawnParams) (SpawnResult, error) {
+ 	s.runtimes[rtID] = child
+ 	s.controlMu.Unlock()
+ 
++	// Track parent-child relationship.
++	if params.ParentID != "" {
++		child.parentID = params.ParentID
++		s.controlMu.Lock()
++		if parent, ok := s.runtimes[params.ParentID]; ok {
++			parent.children = append(parent.children, rtID)
++		}
++		s.controlMu.Unlock()
++	}
++
+ 	releaseReservation := func() {
+ 		s.controlMu.Lock()
+ 		delete(s.runtimes, rtID)
+@@ -912,6 +925,8 @@ func (s *Supervisor) listRuntimes() []map[string]any {
+ 			"exit_code":     rt.exitCode,
+ 			"on_event":      rt.onEvent,
+ 			"sentinel_file": rt.sentinelFile,
++			"parent_id":     rt.parentID,
++			"children":      rt.children,
+ 		}
+ 		rt.mu.Unlock()
+ 		out = append(out, entry)
+@@ -1042,6 +1057,21 @@ func (s *Supervisor) Spawn(raw json.RawMessage) (any, error) {
+ 	if err := json.Unmarshal(raw, &p); err != nil {
+ 		return nil, fmt.Errorf("invalid spawn params: %w", err)
+ 	}
++	// Auto-populate ParentID when the spawn is called by a known runtime.
++	// The caller embeds its own runtime_id in the spawn params; if it maps to
++	// a registered runtime, treat it as the parent.
++	if p.ParentID == "" {
++		var caller struct {
++			RuntimeID string `json:"runtime_id"`
++		}
++		if err := json.Unmarshal(raw, &caller); err == nil && caller.RuntimeID != "" {
++			s.controlMu.Lock()
++			if _, ok := s.runtimes[caller.RuntimeID]; ok {
++				p.ParentID = caller.RuntimeID
++			}
++			s.controlMu.Unlock()
++		}
++	}
+ 	return s.spawn(p)
+ }
+ 
+@@ -1086,6 +1116,8 @@ func (s *Supervisor) RuntimeStatus(rtID string) (any, error) {
+ 		"exit_code":     rt.exitCode,
+ 		"on_event":      rt.onEvent,
+ 		"sentinel_file": rt.sentinelFile,
++		"parent_id":     rt.parentID,
++		"children":      rt.children,
+ 	}
+ 	rt.mu.Unlock()
+ 	return entry, nil

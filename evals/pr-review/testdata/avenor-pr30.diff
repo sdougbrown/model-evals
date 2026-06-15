@@ -1,0 +1,848 @@
+diff --git a/cmd/avenor/watch.go b/cmd/avenor/watch.go
+index 6eea5bb..5c93f64 100644
+--- a/cmd/avenor/watch.go
++++ b/cmd/avenor/watch.go
+@@ -54,6 +54,7 @@ func runWatch(args []string) int {
+ 	follow := fs.Bool("follow", false, "poll and tail the log")
+ 	format := fs.String("format", "plain", "output format: plain (EVENT lines) or json (pass-through NDJSON)")
+ 	classify := fs.Bool("classify", false, "prefix each plain-format digest line with MILESTONE | FINDING | ACTIVITY; in json format, adds a top-level \"classify\" field")
++	accumulate := fs.Bool("accumulate", false, "buffer consecutive thought/message chunks with the same session ID and event type, flushing them as a single human-readable line (plain format only)")
+ 	pollInterval := fs.Duration("poll-interval", 250*time.Millisecond, "follow-mode sleep interval")
+ 	sinceCursor := fs.String("since-cursor", "", "cursor file path: seek to saved offset before reading; rewrite offset on exit")
+ 
+@@ -119,6 +120,7 @@ func runWatch(args []string) int {
+ 		PollInterval:      *pollInterval,
+ 		Format:            *format,
+ 		Classify:          *classify,
++		Accumulate:        *accumulate,
+ 		CursorPath:        *sinceCursor,
+ 		CursorStartOffset: cursorStartOffset,
+ 	}
+diff --git a/internal/digest/accumulate.go b/internal/digest/accumulate.go
+new file mode 100644
+index 0000000..1e6607b
+--- /dev/null
++++ b/internal/digest/accumulate.go
+@@ -0,0 +1,163 @@
++package digest
++
++import (
++	"bytes"
++	"encoding/json"
++	"fmt"
++	"strings"
++	"unicode"
++)
++
++// Accumulator buffers consecutive chunk events (agent.message_chunk,
++// agent.thought_chunk, user.message_chunk) with the same session ID and event
++// type, then flushes them as a single human-readable line when the event type
++// or session changes.
++type Accumulator struct {
++	buffers map[string]*chunkBuf // key: "sessionID|eventType"
++	order   []string             // insertion order for deterministic flushing
++}
++
++type chunkBuf struct {
++	sessionID string
++	eventType string
++	text      strings.Builder
++}
++
++func NewAccumulator() *Accumulator {
++	return &Accumulator{
++		buffers: make(map[string]*chunkBuf),
++	}
++}
++
++// Process ingests a raw event line. It returns zero or more formatted lines
++// that the caller should write to output. For chunk events that match the
++// current buffer key, nothing is returned (the text is accumulated). When a
++// chunk event triggers a flush (different key), the flushed lines are returned
++// but the current event's text is buffered for next time. For non-chunk events,
++// all accumulated buffers are flushed plus the current event is formatted.
++//
++// Empty lines and events with no "event" field are silently ignored.
++func (a *Accumulator) Process(raw []byte, classify bool) ([]string, error) {
++	trimmed := bytes.TrimSpace(raw)
++	if len(trimmed) == 0 {
++		return nil, nil
++	}
++
++	var event map[string]any
++	if err := json.Unmarshal(trimmed, &event); err != nil {
++		return nil, err
++	}
++
++	name := stringField(event, "event")
++	if name == "" {
++		return nil, nil
++	}
++
++	// Non-chunk events: flush all accumulated buffers, then format and return
++	// the current event as a normal line.
++	if !isChunkEvent(name) {
++		var lines []string
++		lines = append(lines, a.flushAll(classify)...)
++		line := digestEventLine(event, name)
++		if line != "" {
++			if classify {
++				tag := Classify(event)
++				line = tag + " " + line
++			}
++			lines = append(lines, line)
++		}
++		return lines, nil
++	}
++
++	// Chunk event: accumulate or flush-and-restart.
++	sessionID := extractSessionID(event)
++	text := chunkText(event)
++	if text == "" {
++		return nil, nil
++	}
++
++	key := sessionID + "|" + name
++
++	// If we have buffers for a different key, flush them first.
++	if len(a.buffers) > 0 {
++		if _, exists := a.buffers[key]; !exists {
++			lines := a.flushAll(classify)
++			a.addChunk(key, sessionID, name, text)
++			return lines, nil
++		}
++	}
++
++	a.addChunk(key, sessionID, name, text)
++	return nil, nil
++}
++
++// FlushRemaining returns formatted lines for any buffered chunks that haven't
++// been flushed yet. Call this at EOF to avoid losing trailing accumulated text.
++func (a *Accumulator) FlushRemaining(classify bool) []string {
++	return a.flushAll(classify)
++}
++
++func (a *Accumulator) addChunk(key, sessionID, eventType, text string) {
++	buf, exists := a.buffers[key]
++	if !exists {
++		buf = &chunkBuf{sessionID: sessionID, eventType: eventType}
++		a.buffers[key] = buf
++		a.order = append(a.order, key)
++	}
++	buf.text.WriteString(text)
++}
++
++func (a *Accumulator) flushAll(classify bool) []string {
++	if len(a.buffers) == 0 {
++		return nil
++	}
++	lines := make([]string, 0, len(a.order))
++	for _, key := range a.order {
++		buf := a.buffers[key]
++		if buf == nil || buf.text.Len() == 0 {
++			continue
++		}
++		line := formatAccumulatedLine(buf)
++		if classify {
++			synthetic := map[string]any{
++				"event":      buf.eventType,
++				"session_id": buf.sessionID,
++				"content":    map[string]any{"text": buf.text.String()},
++			}
++			tag := Classify(synthetic)
++			line = tag + " " + line
++		}
++		lines = append(lines, line)
++	}
++	// Clear after flushing.
++	a.buffers = make(map[string]*chunkBuf)
++	a.order = a.order[:0]
++	return lines
++}
++
++func isChunkEvent(name string) bool {
++	return name == "agent.thought_chunk" || name == "agent.message_chunk" || name == "user.message_chunk"
++}
++
++func extractSessionID(event map[string]any) string {
++	sid := stringField(event, "session_id")
++	if sid == "" {
++		sid = stringField(event, "sessionID")
++	}
++	return sid
++}
++
++// digestEventLine formats a single non-chunk event the same way DigestLine
++// does, reusing the already-parsed event map.
++func digestEventLine(event map[string]any, name string) string {
++	sessionID := extractSessionID(event)
++	return fmt.Sprintf("EVENT %s %s %s", name, sessionID, clean(excerpt(event, name)))
++}
++
++// formatAccumulatedLine formats a buffered chunk as a single EVENT line.
++// The accumulated text is not truncated (unlike per-chunk excerpts).
++func formatAccumulatedLine(buf *chunkBuf) string {
++	text := lineBreakWhitespace.ReplaceAllString(buf.text.String(), " ")
++	text = strings.TrimRightFunc(text, unicode.IsSpace)
++	return fmt.Sprintf("EVENT %s %s %s", buf.eventType, buf.sessionID, text)
++}
+diff --git a/internal/digest/accumulate_test.go b/internal/digest/accumulate_test.go
+new file mode 100644
+index 0000000..09b0b25
+--- /dev/null
++++ b/internal/digest/accumulate_test.go
+@@ -0,0 +1,261 @@
++package digest
++
++import (
++	"strings"
++	"testing"
++)
++
++func TestAccumulatorProcessChunks(t *testing.T) {
++	acc := NewAccumulator()
++
++	// Same session + same type should accumulate without emitting.
++	lines, err := acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"He","type":"text"}}`), false)
++	if err != nil {
++		t.Fatalf("Process() error = %v", err)
++	}
++	if len(lines) != 0 {
++		t.Fatalf("Process() returned %d lines, want 0 (accumulating)", len(lines))
++	}
++
++	lines, err = acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"llo","type":"text"}}`), false)
++	if err != nil {
++		t.Fatalf("Process() error = %v", err)
++	}
++	if len(lines) != 0 {
++		t.Fatalf("Process() returned %d lines, want 0 (still accumulating)", len(lines))
++	}
++}
++
++func TestAccumulatorFlushesOnTypeChange(t *testing.T) {
++	acc := NewAccumulator()
++
++	acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"thinking...","type":"text"}}`), false)
++	acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":" more thinking","type":"text"}}`), false)
++
++	// Different event type triggers flush.
++	lines, err := acc.Process([]byte(`{"event":"agent.message_chunk","session_id":"ses_1","content":{"text":"Hello world","type":"text"}}`), false)
++	if err != nil {
++		t.Fatalf("Process() error = %v", err)
++	}
++	if len(lines) != 1 {
++		t.Fatalf("Process() returned %d lines, want 1 (flush thought_chunks)", len(lines))
++	}
++	want := "EVENT agent.thought_chunk ses_1 thinking... more thinking"
++	if lines[0] != want {
++		t.Fatalf("flushed line = %q, want %q", lines[0], want)
++	}
++
++	// After flush, the new event type starts accumulating.
++	rem := acc.FlushRemaining(false)
++	if len(rem) != 1 {
++		t.Fatalf("FlushRemaining() returned %d lines, want 1", len(rem))
++	}
++	wantRem := "EVENT agent.message_chunk ses_1 Hello world"
++	if rem[0] != wantRem {
++		t.Fatalf("FlushRemaining line = %q, want %q", rem[0], wantRem)
++	}
++}
++
++func TestAccumulatorFlushesOnSessionChange(t *testing.T) {
++	acc := NewAccumulator()
++
++	acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_a","content":{"text":"session A","type":"text"}}`), false)
++
++	// Different session triggers flush.
++	lines, err := acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_b","content":{"text":"session B","type":"text"}}`), false)
++	if err != nil {
++		t.Fatalf("Process() error = %v", err)
++	}
++	if len(lines) != 1 {
++		t.Fatalf("Process() returned %d lines, want 1 (flush ses_a)", len(lines))
++	}
++	want := "EVENT agent.thought_chunk ses_a session A"
++	if lines[0] != want {
++		t.Fatalf("flushed line = %q, want %q", lines[0], want)
++	}
++}
++
++func TestAccumulatorFlushesOnNonChunk(t *testing.T) {
++	acc := NewAccumulator()
++
++	// Buffer a thought_chunk.
++	acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"thinking","type":"text"}}`), false)
++
++	// Different type triggers flush of the thought_chunk and starts buffering message.
++	lines, _ := acc.Process([]byte(`{"event":"agent.message_chunk","session_id":"ses_1","content":{"text":"msg","type":"text"}}`), false)
++	if len(lines) != 1 || lines[0] != "EVENT agent.thought_chunk ses_1 thinking" {
++		t.Fatalf("type-change flush: got %v", lines)
++	}
++
++	// Non-chunk event flushes the message_chunk buffer AND emits the non-chunk event.
++	lines, err := acc.Process([]byte(`{"event":"tool.call","session_id":"ses_1","kind":"read","title":"foo.go"}`), false)
++	if err != nil {
++		t.Fatalf("Process() error = %v", err)
++	}
++	if len(lines) != 2 {
++		t.Fatalf("Process() returned %d lines, want 2 (1 flushed message + 1 tool)", len(lines))
++	}
++	if lines[0] != "EVENT agent.message_chunk ses_1 msg" {
++		t.Fatalf("line[0] = %q", lines[0])
++	}
++	if lines[1] != "EVENT tool.call ses_1 read:foo.go" {
++		t.Fatalf("line[1] = %q", lines[1])
++	}
++}
++
++func TestAccumulatorFlushesOnSessionAndTypeChange(t *testing.T) {
++	acc := NewAccumulator()
++
++	// Buffer thought chunks for ses_a.
++	acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_a","content":{"text":"A thinking","type":"text"}}`), false)
++
++	// Different type same session flushes thought, starts buffering message.
++	lines, _ := acc.Process([]byte(`{"event":"agent.message_chunk","session_id":"ses_a","content":{"text":"A msg","type":"text"}}`), false)
++	if len(lines) != 1 {
++		t.Fatalf("first type change: got %d lines, want 1", len(lines))
++	}
++	if lines[0] != "EVENT agent.thought_chunk ses_a A thinking" {
++		t.Fatalf("got %q", lines[0])
++	}
++
++	// Different session triggers flush of ses_a's message buffer.
++	lines, _ = acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_b","content":{"text":"B thinking","type":"text"}}`), false)
++	if len(lines) != 1 {
++		t.Fatalf("session change: got %d lines, want 1", len(lines))
++	}
++	if lines[0] != "EVENT agent.message_chunk ses_a A msg" {
++		t.Fatalf("got %q", lines[0])
++	}
++
++	// Remaining has ses_b's thought.
++	rem := acc.FlushRemaining(false)
++	if len(rem) != 1 || rem[0] != "EVENT agent.thought_chunk ses_b B thinking" {
++		t.Fatalf("FlushRemaining: %v", rem)
++	}
++}
++
++func TestAccumulatorWithClassify(t *testing.T) {
++	acc := NewAccumulator()
++
++	acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"[finding] possible issue","type":"text"}}`), true)
++
++	// Flush with classification.
++	lines, err := acc.Process([]byte(`{"event":"session.end","session_id":"ses_1","stop_reason":"end_turn"}`), true)
++	if err != nil {
++		t.Fatalf("Process() error = %v", err)
++	}
++	if len(lines) != 2 {
++		t.Fatalf("got %d lines, want 2", len(lines))
++	}
++	if !strings.HasPrefix(lines[0], "FINDING EVENT") {
++		t.Fatalf("line[0] = %q, want FINDING prefix", lines[0])
++	}
++	if !strings.HasPrefix(lines[1], "MILESTONE EVENT") {
++		t.Fatalf("line[1] = %q, want MILESTONE prefix", lines[1])
++	}
++}
++
++func TestAccumulatorEmptyChunksIgnored(t *testing.T) {
++	acc := NewAccumulator()
++
++	// SSE format with empty delta.
++	lines, err := acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_1","delta":""}`), false)
++	if err != nil {
++		t.Fatalf("Process() error = %v", err)
++	}
++	if len(lines) != 0 {
++		t.Fatalf("got %d lines, want 0 (empty text ignored)", len(lines))
++	}
++
++	// Now a real chunk.
++	acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"real","type":"text"}}`), false)
++	rem := acc.FlushRemaining(false)
++	if len(rem) != 1 || rem[0] != "EVENT agent.thought_chunk ses_1 real" {
++		t.Fatalf("FlushRemaining: %v", rem)
++	}
++}
++
++func TestAccumulatorFlushRemainingEmpty(t *testing.T) {
++	acc := NewAccumulator()
++	lines := acc.FlushRemaining(false)
++	if len(lines) != 0 {
++		t.Fatalf("FlushRemaining on empty accumulator returned %d lines", len(lines))
++	}
++}
++
++func TestAccumulatorNonEventJSONIgnored(t *testing.T) {
++	acc := NewAccumulator()
++
++	lines, err := acc.Process([]byte(`{"no_event_field":"here"}`), false)
++	if err != nil {
++		t.Fatalf("Process() error = %v", err)
++	}
++	if len(lines) != 0 {
++		t.Fatalf("got %d lines, want 0 (non-event JSON ignored)", len(lines))
++	}
++}
++
++func TestAccumulatorMalformedJSONReturnsError(t *testing.T) {
++	acc := NewAccumulator()
++	_, err := acc.Process([]byte(`{broken`), false)
++	if err == nil {
++		t.Fatal("Process() error = nil, want malformed JSON error")
++	}
++}
++
++func TestAccumulatorEmptyLineIgnored(t *testing.T) {
++	acc := NewAccumulator()
++
++	lines, err := acc.Process([]byte(""), false)
++	if err != nil {
++		t.Fatalf("Process() error = %v", err)
++	}
++	if len(lines) != 0 {
++		t.Fatalf("got %d lines, want 0", len(lines))
++	}
++
++	lines, err = acc.Process([]byte("   \n"), false)
++	if err != nil {
++		t.Fatalf("Process() error = %v", err)
++	}
++	if len(lines) != 0 {
++		t.Fatalf("got %d lines, want 0", len(lines))
++	}
++}
++
++func TestAccumulatorTwoSessionsInterleaved(t *testing.T) {
++	acc := NewAccumulator()
++
++	// Buffer ses_a thought.
++	acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_a","content":{"text":"A1","type":"text"}}`), false)
++
++	// Different session triggers flush of ses_a, then buffers ses_b.
++	lines, _ := acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_b","content":{"text":"B1","type":"text"}}`), false)
++	if len(lines) != 1 || lines[0] != "EVENT agent.thought_chunk ses_a A1" {
++		t.Fatalf("first flush (ses_a): got %v", lines)
++	}
++
++	// Back to ses_a — different session triggers flush of ses_b, then buffers ses_a.
++	lines, _ = acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_a","content":{"text":"A2","type":"text"}}`), false)
++	if len(lines) != 1 || lines[0] != "EVENT agent.thought_chunk ses_b B1" {
++		t.Fatalf("second flush (ses_b): got %v", lines)
++	}
++
++	rem := acc.FlushRemaining(false)
++	if len(rem) != 1 || rem[0] != "EVENT agent.thought_chunk ses_a A2" {
++		t.Fatalf("FlushRemaining: %v", rem)
++	}
++}
++
++func TestAccumulatorSSEDeltaFormat(t *testing.T) {
++	acc := NewAccumulator()
++
++	// SSE format uses "delta" instead of "content.text".
++	acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_1","delta":"th","message_id":"m1","part_id":"p1"}`), false)
++	acc.Process([]byte(`{"event":"agent.thought_chunk","session_id":"ses_1","delta":"inking","message_id":"m1","part_id":"p1"}`), false)
++
++	rem := acc.FlushRemaining(false)
++	if len(rem) != 1 || rem[0] != "EVENT agent.thought_chunk ses_1 thinking" {
++		t.Fatalf("FlushRemaining: %v", rem)
++	}
++}
+diff --git a/internal/digest/digest.go b/internal/digest/digest.go
+index 8a925f7..a2071eb 100644
+--- a/internal/digest/digest.go
++++ b/internal/digest/digest.go
+@@ -35,6 +35,11 @@ type Options struct {
+ 	// MILESTONE, FINDING, or ACTIVITY. For JSON format, a top-level
+ 	// "classify" field is injected into each emitted object.
+ 	Classify bool
++	// Accumulate, when true in plain format, buffers consecutive chunk
++	// events (thought/message chunks) with the same session ID and event
++	// type, flushing them as a single human-readable line when the event
++	// type or session changes. Ignored in json format.
++	Accumulate bool
+ 
+ 	// CursorPath, when non-empty, causes Stream to atomically rewrite the
+ 	// cursor file after processing. The caller is responsible for seeking the
+@@ -136,14 +141,33 @@ func Stream(in io.Reader, out io.Writer, opts Options) error {
+ 		return writeCursor(opts.CursorPath, currentOffset())
+ 	}
+ 
++	var acc *Accumulator
++	useAccumulator := opts.Accumulate && format == "plain"
++	if useAccumulator {
++		acc = NewAccumulator()
++	}
++
+ 	lineNumber := 0
+ 	eventsSinceCursorWrite := 0
+ 	for {
+ 		raw, err := reader.ReadBytes('\n')
+ 		if len(raw) > 0 {
+ 			lineNumber++
+-			if streamErr := streamLine(raw, lineNumber, out, format, opts.Classify); streamErr != nil {
+-				return streamErr
++			if useAccumulator {
++				lines, processErr := acc.Process(raw, opts.Classify)
++				if processErr != nil {
++					logMalformed(lineNumber, processErr)
++				} else {
++					for _, line := range lines {
++						if _, writeErr := fmt.Fprintln(out, line); writeErr != nil {
++							return writeErr
++						}
++					}
++				}
++			} else {
++				if streamErr := streamLine(raw, lineNumber, out, format, opts.Classify); streamErr != nil {
++					return streamErr
++				}
+ 			}
+ 			eventsSinceCursorWrite++
+ 			// In follow mode, rewrite the cursor periodically so a crash only
+@@ -163,11 +187,26 @@ func Stream(in io.Reader, out io.Writer, opts Options) error {
+ 				time.Sleep(pollInterval)
+ 				continue
+ 			}
+-			// Oneshot mode: write cursor on clean EOF.
++			// Oneshot mode: flush accumulated chunks, then write cursor on clean EOF.
++			if acc != nil {
++				for _, line := range acc.FlushRemaining(opts.Classify) {
++					if _, writeErr := fmt.Fprintln(out, line); writeErr != nil {
++						return writeErr
++					}
++				}
++			}
+ 			return writeCurrentCursor()
+ 		}
+ 		if errors.Is(err, os.ErrClosed) {
+-			// Graceful shutdown (file closed by signal handler): write cursor.
++			// Graceful shutdown (file closed by signal handler): flush accumulated
++			// chunks, then write cursor.
++			if acc != nil {
++				for _, line := range acc.FlushRemaining(opts.Classify) {
++					if _, writeErr := fmt.Fprintln(out, line); writeErr != nil {
++						return writeErr
++					}
++				}
++			}
+ 			return writeCurrentCursor()
+ 		}
+ 		return err
+@@ -238,10 +277,19 @@ func logMalformed(lineNumber int, err error) {
+ 	fmt.Fprintf(os.Stderr, "avenor watch: malformed event at line %d: %v\n", lineNumber, err)
+ }
+ 
++// chunkText extracts the human-readable text from a chunk event (message or
++// thought), handling both ACP format (content.text) and SSE format (delta).
++func chunkText(event map[string]any) string {
++	if text := contentText(event["content"]); text != "" {
++		return text
++	}
++	return stringField(event, "delta")
++}
++
+ func excerpt(event map[string]any, name string) string {
+ 	switch name {
+ 	case "agent.message_chunk", "agent.thought_chunk", "user.message_chunk":
+-		return contentText(event["content"])
++		return chunkText(event)
+ 	case "agent.status":
+ 		phase := stringField(event, "phase")
+ 		if label := stringField(event, "label"); label != "" {
+diff --git a/internal/digest/digest_test.go b/internal/digest/digest_test.go
+index 00b44a3..3298a1d 100644
+--- a/internal/digest/digest_test.go
++++ b/internal/digest/digest_test.go
+@@ -548,3 +548,247 @@ func TestCursorWriteRenameFailure(t *testing.T) {
+ 		t.Fatalf("target path is no longer a directory after failure")
+ 	}
+ }
++
++// ---- accumulate tests ----
++
++func TestStreamAccumulateChunksMerged(t *testing.T) {
++	input := strings.Join([]string{
++		`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"He","type":"text"}}`,
++		`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"llo","type":"text"}}`,
++		`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":" world","type":"text"}}`,
++	}, "\n") + "\n"
++
++	var out bytes.Buffer
++	if err := Stream(strings.NewReader(input), &out, Options{Accumulate: true}); err != nil {
++		t.Fatalf("Stream() error = %v", err)
++	}
++
++	want := "EVENT agent.thought_chunk ses_1 Hello world\n"
++	if got := out.String(); got != want {
++		t.Fatalf("Stream() = %q, want %q", got, want)
++	}
++}
++
++func TestStreamAccumulateTypeChangeFlushes(t *testing.T) {
++	input := strings.Join([]string{
++		`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"thinking","type":"text"}}`,
++		`{"event":"agent.message_chunk","session_id":"ses_1","content":{"text":"hello","type":"text"}}`,
++	}, "\n") + "\n"
++
++	var out bytes.Buffer
++	if err := Stream(strings.NewReader(input), &out, Options{Accumulate: true}); err != nil {
++		t.Fatalf("Stream() error = %v", err)
++	}
++
++	lines := strings.Split(strings.TrimRight(out.String(), "\n"), "\n")
++	if len(lines) != 2 {
++		t.Fatalf("Stream() emitted %d lines, want 2: %q", len(lines), out.String())
++	}
++	if lines[0] != "EVENT agent.thought_chunk ses_1 thinking" {
++		t.Fatalf("lines[0] = %q", lines[0])
++	}
++	if lines[1] != "EVENT agent.message_chunk ses_1 hello" {
++		t.Fatalf("lines[1] = %q", lines[1])
++	}
++}
++
++func TestStreamAccumulateNonChunkFlushes(t *testing.T) {
++	input := strings.Join([]string{
++		`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"thinking","type":"text"}}`,
++		`{"event":"tool.call","session_id":"ses_1","kind":"read","title":"file.go"}`,
++		`{"event":"agent.message_chunk","session_id":"ses_1","content":{"text":"done","type":"text"}}`,
++	}, "\n") + "\n"
++
++	var out bytes.Buffer
++	if err := Stream(strings.NewReader(input), &out, Options{Accumulate: true}); err != nil {
++		t.Fatalf("Stream() error = %v", err)
++	}
++
++	lines := strings.Split(strings.TrimRight(out.String(), "\n"), "\n")
++	if len(lines) != 3 {
++		t.Fatalf("Stream() emitted %d lines, want 3: %q", len(lines), out.String())
++	}
++	if lines[0] != "EVENT agent.thought_chunk ses_1 thinking" {
++		t.Fatalf("lines[0] = %q", lines[0])
++	}
++	if lines[1] != "EVENT tool.call ses_1 read:file.go" {
++		t.Fatalf("lines[1] = %q", lines[1])
++	}
++	if lines[2] != "EVENT agent.message_chunk ses_1 done" {
++		t.Fatalf("lines[2] = %q", lines[2])
++	}
++}
++
++func TestStreamAccumulateSessionChangeFlushes(t *testing.T) {
++	input := strings.Join([]string{
++		`{"event":"agent.thought_chunk","session_id":"ses_a","content":{"text":"A","type":"text"}}`,
++		`{"event":"agent.thought_chunk","session_id":"ses_b","content":{"text":"B","type":"text"}}`,
++	}, "\n") + "\n"
++
++	var out bytes.Buffer
++	if err := Stream(strings.NewReader(input), &out, Options{Accumulate: true}); err != nil {
++		t.Fatalf("Stream() error = %v", err)
++	}
++
++	lines := strings.Split(strings.TrimRight(out.String(), "\n"), "\n")
++	if len(lines) != 2 {
++		t.Fatalf("Stream() emitted %d lines, want 2: %q", len(lines), out.String())
++	}
++	if lines[0] != "EVENT agent.thought_chunk ses_a A" {
++		t.Fatalf("lines[0] = %q", lines[0])
++	}
++	if lines[1] != "EVENT agent.thought_chunk ses_b B" {
++		t.Fatalf("lines[1] = %q", lines[1])
++	}
++}
++
++func TestStreamAccumulateWithClassify(t *testing.T) {
++	input := strings.Join([]string{
++		`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"[finding] something wrong","type":"text"}}`,
++		`{"event":"session.end","session_id":"ses_1","stop_reason":"end_turn"}`,
++	}, "\n") + "\n"
++
++	var out bytes.Buffer
++	if err := Stream(strings.NewReader(input), &out, Options{Accumulate: true, Classify: true}); err != nil {
++		t.Fatalf("Stream() error = %v", err)
++	}
++
++	lines := strings.Split(strings.TrimRight(out.String(), "\n"), "\n")
++	if len(lines) != 2 {
++		t.Fatalf("Stream() emitted %d lines, want 2: %q", len(lines), out.String())
++	}
++	if !strings.HasPrefix(lines[0], "FINDING EVENT agent.thought_chunk") {
++		t.Fatalf("lines[0] = %q, want FINDING prefix", lines[0])
++	}
++	if !strings.HasPrefix(lines[1], "MILESTONE EVENT session.end") {
++		t.Fatalf("lines[1] = %q, want MILESTONE prefix", lines[1])
++	}
++}
++
++func TestStreamAccumulateGolden(t *testing.T) {
++	inputPath := filepath.Join("..", "..", "testdata", "digest", "accumulate.ndjson")
++	goldenPath := filepath.Join("..", "..", "testdata", "digest", "accumulate.golden")
++
++	input, err := os.Open(inputPath)
++	if err != nil {
++		t.Fatalf("open input: %v", err)
++	}
++	defer input.Close()
++
++	var out bytes.Buffer
++	if err := Stream(input, &out, Options{Accumulate: true}); err != nil {
++		t.Fatalf("Stream() error = %v", err)
++	}
++
++	if *update {
++		if err := os.WriteFile(goldenPath, out.Bytes(), 0o644); err != nil {
++			t.Fatalf("update golden: %v", err)
++		}
++	}
++
++	want, err := os.ReadFile(goldenPath)
++	if err != nil {
++		t.Fatalf("read golden: %v", err)
++	}
++	if got := out.String(); got != string(want) {
++		t.Fatalf("Stream() mismatch\n--- got ---\n%s--- want ---\n%s", got, want)
++	}
++}
++
++func TestStreamAccumulateWithNonEventLines(t *testing.T) {
++	input := strings.Join([]string{
++		`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"A","type":"text"}}`,
++		`{"type":"text","part":{"text":"legacy noise"}}`,
++		`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"B","type":"text"}}`,
++		`{"event":"session.end","session_id":"ses_1","stop_reason":"end_turn"}`,
++		`{"sessionID":"ses_legacy"}`,
++	}, "\n") + "\n"
++
++	var out bytes.Buffer
++	if err := Stream(strings.NewReader(input), &out, Options{Accumulate: true}); err != nil {
++		t.Fatalf("Stream() error = %v", err)
++	}
++
++	// Non-event lines are skipped, chunks before and after are accumulated.
++	// Legacy non-event lines at the end are ignored.
++	lines := strings.Split(strings.TrimRight(out.String(), "\n"), "\n")
++	if len(lines) != 2 {
++		t.Fatalf("Stream() emitted %d lines, want 2: %q", len(lines), out.String())
++	}
++	if lines[0] != "EVENT agent.thought_chunk ses_1 AB" {
++		t.Fatalf("lines[0] = %q", lines[0])
++	}
++	if lines[1] != "EVENT session.end ses_1 stop_reason=end_turn" {
++		t.Fatalf("lines[1] = %q", lines[1])
++	}
++}
++
++func TestStreamAccumulateJSONFormatIgnored(t *testing.T) {
++	// Accumulate is ignored when format is json.
++	input := strings.Join([]string{
++		`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"A","type":"text"}}`,
++		`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"B","type":"text"}}`,
++		`{"event":"session.end","session_id":"ses_1","stop_reason":"end_turn"}`,
++	}, "\n") + "\n"
++
++	var out bytes.Buffer
++	if err := Stream(strings.NewReader(input), &out, Options{Accumulate: true, Format: "json"}); err != nil {
++		t.Fatalf("Stream() error = %v", err)
++	}
++
++	// JSON format just passes through.
++	lines := strings.Split(strings.TrimRight(out.String(), "\n"), "\n")
++	if len(lines) != 3 {
++		t.Fatalf("Stream() emitted %d lines, want 3 (json passthrough): %q", len(lines), out.String())
++	}
++}
++
++func TestStreamAccumulateFollowModeDrainsBeforePoll(t *testing.T) {
++	dir := t.TempDir()
++	logPath := filepath.Join(dir, "test.ndjson")
++
++	content := strings.Join([]string{
++		`{"event":"agent.thought_chunk","session_id":"ses_1","content":{"text":"thinking","type":"text"}}`,
++		`{"event":"session.end","session_id":"ses_1","stop_reason":"end_turn"}`,
++	}, "\n") + "\n"
++
++	if err := os.WriteFile(logPath, []byte(content), 0o644); err != nil {
++		t.Fatalf("write log: %v", err)
++	}
++
++	f, err := os.Open(logPath)
++	if err != nil {
++		t.Fatalf("open log: %v", err)
++	}
++
++	var out bytes.Buffer
++	// Run Stream in a goroutine, close the file after it drains the content.
++	errCh := make(chan error, 1)
++	go func() {
++		errCh <- Stream(f, &out, Options{Accumulate: true, Follow: true, PollInterval: 5 * time.Millisecond})
++	}()
++
++	// Wait briefly for Stream to consume the file, then close it.
++	time.Sleep(50 * time.Millisecond)
++	f.Close()
++
++	select {
++	case err := <-errCh:
++		if err != nil {
++			t.Fatalf("Stream() error = %v", err)
++		}
++	case <-time.After(5 * time.Second):
++		t.Fatal("Stream() did not return after file close")
++	}
++
++	lines := strings.Split(strings.TrimRight(out.String(), "\n"), "\n")
++	if len(lines) != 2 {
++		t.Fatalf("Stream() emitted %d lines, want 2: %q", len(lines), out.String())
++	}
++	if lines[0] != "EVENT agent.thought_chunk ses_1 thinking" {
++		t.Fatalf("lines[0] = %q", lines[0])
++	}
++	if lines[1] != "EVENT session.end ses_1 stop_reason=end_turn" {
++		t.Fatalf("lines[1] = %q", lines[1])
++	}
++}
+diff --git a/testdata/digest/accumulate.golden b/testdata/digest/accumulate.golden
+new file mode 100644
+index 0000000..c987b35
+--- /dev/null
++++ b/testdata/digest/accumulate.golden
+@@ -0,0 +1,7 @@
++EVENT session.plan ses_acc Review changes
++EVENT agent.thought_chunk ses_acc Let me read the classifier
++EVENT agent.message_chunk ses_acc I'll read the classifier.go
++EVENT tool.call ses_acc read:classifier.go [pending]
++EVENT agent.thought_chunk ses_acc Now analyzing diff
++EVENT agent.message_chunk ses_acc The code looks good
++EVENT session.end ses_acc stop_reason=end_turn
+diff --git a/testdata/digest/accumulate.ndjson b/testdata/digest/accumulate.ndjson
+new file mode 100644
+index 0000000..c68240f
+--- /dev/null
++++ b/testdata/digest/accumulate.ndjson
+@@ -0,0 +1,19 @@
++{"event":"session.plan","session_id":"ses_acc","title":"Review changes"}
++{"event":"agent.thought_chunk","session_id":"ses_acc","content":{"text":"Let","type":"text"}}
++{"event":"agent.thought_chunk","session_id":"ses_acc","content":{"text":" me","type":"text"}}
++{"event":"agent.thought_chunk","session_id":"ses_acc","content":{"text":" read","type":"text"}}
++{"event":"agent.thought_chunk","session_id":"ses_acc","content":{"text":" the","type":"text"}}
++{"event":"agent.thought_chunk","session_id":"ses_acc","content":{"text":" classifier","type":"text"}}
++{"event":"agent.message_chunk","session_id":"ses_acc","content":{"text":"I'll","type":"text"}}
++{"event":"agent.message_chunk","session_id":"ses_acc","content":{"text":" read","type":"text"}}
++{"event":"agent.message_chunk","session_id":"ses_acc","content":{"text":" the","type":"text"}}
++{"event":"agent.message_chunk","session_id":"ses_acc","content":{"text":" classifier.go","type":"text"}}
++{"event":"tool.call","session_id":"ses_acc","kind":"read","title":"classifier.go","status":"pending"}
++{"event":"agent.thought_chunk","session_id":"ses_acc","content":{"text":"Now","type":"text"}}
++{"event":"agent.thought_chunk","session_id":"ses_acc","content":{"text":" analyzing","type":"text"}}
++{"event":"agent.thought_chunk","session_id":"ses_acc","content":{"text":" diff","type":"text"}}
++{"event":"agent.message_chunk","session_id":"ses_acc","content":{"text":"The","type":"text"}}
++{"event":"agent.message_chunk","session_id":"ses_acc","content":{"text":" code","type":"text"}}
++{"event":"agent.message_chunk","session_id":"ses_acc","content":{"text":" looks","type":"text"}}
++{"event":"agent.message_chunk","session_id":"ses_acc","content":{"text":" good","type":"text"}}
++{"event":"session.end","session_id":"ses_acc","stop_reason":"end_turn"}

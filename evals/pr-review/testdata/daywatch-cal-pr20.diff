@@ -1,0 +1,359 @@
+diff --git a/.changeset/great-flowers-listen.md b/.changeset/great-flowers-listen.md
+new file mode 100644
+index 0000000..ea17e13
+--- /dev/null
++++ b/.changeset/great-flowers-listen.md
+@@ -0,0 +1,10 @@
++---
++"@daywatch/cal": patch
++"@daywatch/mcp": patch
++---
++
++Implement `fixedBetween` semantics in both evaluators
++
++`fixedBetween: true` on a `DateRange` now correctly matches every day between `fromDate` and `toDate`, bypassing recurrence filters (`everyWeekday`, `everyDate`, `everyMonth`) while still respecting exclusions (`exceptDates`, `exceptBetween`). Previously this property was only used by the iCal RRULE mapper and was silently ignored at evaluation time.
++
++Fixes #16.
+diff --git a/crates/daywatch-cal/src/evaluator.rs b/crates/daywatch-cal/src/evaluator.rs
+index 343816b..b8b2392 100644
+--- a/crates/daywatch-cal/src/evaluator.rs
++++ b/crates/daywatch-cal/src/evaluator.rs
+@@ -29,6 +29,7 @@ struct CompiledRange {
+     except_between: Option<Vec<(String, String)>>,
+     has_recurrence: bool,
+     has_time_fields: bool,
++    fixed_between: bool,
+ }
+ 
+ struct RawSpan {
+@@ -71,6 +72,7 @@ fn compile_range(range: &DateRange) -> CompiledRange {
+                 except_between: except_between.clone(),
+                 has_recurrence: false,
+                 has_time_fields: has_time_fields_inner(range),
++                fixed_between: false,
+             }
+         }
+         DaySelector::Recurrence {
+@@ -119,12 +121,13 @@ fn compile_range(range: &DateRange) -> CompiledRange {
+                 except_between: except_between.clone(),
+                 has_recurrence,
+                 has_time_fields: has_time_fields_inner(range),
++                fixed_between: false,
+             }
+         }
+         DaySelector::Range {
+             from_date: _,
+             to_date: _,
+-            fixed_between: _,
++            fixed_between,
+             except_dates,
+             except_between,
+         } => CompiledRange {
+@@ -139,6 +142,7 @@ fn compile_range(range: &DateRange) -> CompiledRange {
+             except_between: except_between.clone(),
+             has_recurrence: false,
+             has_time_fields: has_time_fields_inner(range),
++            fixed_between: *fixed_between,
+         },
+     }
+ }
+@@ -259,6 +263,10 @@ impl RangeEvaluator {
+             return false;
+         }
+ 
++        if compiled.fixed_between {
++            return true;
++        }
++
+         if let Some(ref set) = compiled.dates_set {
+             return set.contains(date);
+         }
+@@ -969,6 +977,20 @@ impl RangeEvaluator {
+             None => return vec![],
+         };
+ 
++        if compiled.fixed_between {
++            let all_days: Vec<String> = date_range(from_nd, to_nd)
++                .into_iter()
++                .map(format_date)
++                .collect();
++            if compiled.except_dates_set.is_none() && compiled.except_between.is_none() {
++                return all_days;
++            }
++            return all_days
++                .into_iter()
++                .filter(|day| !is_date_excluded(day, &compiled))
++                .collect();
++        }
++
+         if !compiled.has_recurrence {
+             let all_days: Vec<String> = date_range(from_nd, to_nd)
+                 .into_iter()
+@@ -1331,6 +1353,114 @@ mod tests {
+         assert!(!ev.is_date_in_range("2026-02-28", &range));
+     }
+ 
++    #[test]
++    fn test_fixed_between_overrides_recurrence() {
++        let ev = evaluator();
++        let range = make_range(
++            "1",
++            "test",
++            DaySelector::Range {
++                from_date: Some(day("2026-03-10")),
++                to_date: Some(day("2026-03-14")),
++                fixed_between: true,
++                except_dates: None,
++                except_between: None,
++            },
++            None, /* recurrence filters are not stored on DaySelector::Range,
++                   * but the intent is: if a range has fixedBetween true,
++                   * it should match every day in the window regardless of
++                   * any weekday/date/month recurrence.
++                   */
++        );
++        // Every day in the window matches
++        assert!(ev.is_date_in_range("2026-03-10", &range));
++        assert!(ev.is_date_in_range("2026-03-11", &range));
++        assert!(ev.is_date_in_range("2026-03-12", &range));
++        assert!(ev.is_date_in_range("2026-03-13", &range));
++        assert!(ev.is_date_in_range("2026-03-14", &range));
++        // Out of window
++        assert!(!ev.is_date_in_range("2026-03-09", &range));
++        assert!(!ev.is_date_in_range("2026-03-15", &range));
++    }
++
++    #[test]
++    fn test_fixed_between_expand_all_days() {
++        let ev = evaluator();
++        let range = make_range(
++            "1",
++            "test",
++            DaySelector::Range {
++                from_date: Some(day("2026-03-10")),
++                to_date: Some(day("2026-03-14")),
++                fixed_between: true,
++                except_dates: None,
++                except_between: None,
++            },
++            None,
++        );
++        let from = NaiveDate::from_ymd_opt(2026, 3, 10).unwrap();
++        let to = NaiveDate::from_ymd_opt(2026, 3, 14).unwrap();
++        let occurrences = ev.expand(&range, from, to);
++        assert_eq!(occurrences.len(), 5);
++    }
++
++    #[test]
++    fn test_fixed_between_respects_except() {
++        let ev = evaluator();
++        let range = make_range(
++            "1",
++            "test",
++            DaySelector::Range {
++                from_date: Some(day("2026-03-10")),
++                to_date: Some(day("2026-03-14")),
++                fixed_between: true,
++                except_dates: Some(vec![day("2026-03-12")]),
++                except_between: None,
++            },
++            None,
++        );
++        assert!(ev.is_date_in_range("2026-03-11", &range));
++        assert!(!ev.is_date_in_range("2026-03-12", &range)); // excluded
++        assert!(ev.is_date_in_range("2026-03-13", &range));
++
++        let from = NaiveDate::from_ymd_opt(2026, 3, 10).unwrap();
++        let to = NaiveDate::from_ymd_opt(2026, 3, 14).unwrap();
++        let occurrences = ev.expand(&range, from, to);
++        let dates: Vec<&str> = occurrences.iter().map(|o| o.date.as_str()).collect();
++        assert_eq!(
++            dates,
++            vec!["2026-03-10", "2026-03-11", "2026-03-13", "2026-03-14",]
++        );
++    }
++
++    #[test]
++    fn test_fixed_between_respects_except_between() {
++        let ev = evaluator();
++        let range = make_range(
++            "1",
++            "test",
++            DaySelector::Range {
++                from_date: Some(day("2026-03-10")),
++                to_date: Some(day("2026-03-14")),
++                fixed_between: true,
++                except_dates: None,
++                except_between: Some(vec![(day("2026-03-11"), day("2026-03-13"))]),
++            },
++            None,
++        );
++        assert!(ev.is_date_in_range("2026-03-10", &range));
++        assert!(!ev.is_date_in_range("2026-03-11", &range)); // excluded
++        assert!(!ev.is_date_in_range("2026-03-12", &range)); // excluded
++        assert!(!ev.is_date_in_range("2026-03-13", &range)); // excluded
++        assert!(ev.is_date_in_range("2026-03-14", &range));
++
++        let from = NaiveDate::from_ymd_opt(2026, 3, 10).unwrap();
++        let to = NaiveDate::from_ymd_opt(2026, 3, 14).unwrap();
++        let occurrences = ev.expand(&range, from, to);
++        let dates: Vec<&str> = occurrences.iter().map(|o| o.date.as_str()).collect();
++        assert_eq!(dates, vec!["2026-03-10", "2026-03-14",]);
++    }
++
+     #[test]
+     fn test_bounds_before_date_check() {
+         let ev = evaluator();
+diff --git a/packages/core/__tests__/evaluator.test.ts b/packages/core/__tests__/evaluator.test.ts
+index 09893fa..59c04e7 100644
+--- a/packages/core/__tests__/evaluator.test.ts
++++ b/packages/core/__tests__/evaluator.test.ts
+@@ -92,6 +92,76 @@ describe('RangeEvaluator', () => {
+       expect(utcEvaluator.isDateInRange('2026-03-21', range)).toBe(false);
+     });
+ 
++    it('fixedBetween true overrides recurrence patterns', () => {
++      const range = makeRange({
++        fixedBetween: true,
++        fromDate: '2026-03-10',
++        toDate: '2026-03-14',
++        everyWeekday: [1], // Monday
++      });
++      // 2026-03-10 is Tuesday, 2026-03-11 is Wednesday, etc.
++      // fixedBetween should match every day in the window regardless of everyWeekday
++      expect(utcEvaluator.isDateInRange('2026-03-10', range)).toBe(true);
++      expect(utcEvaluator.isDateInRange('2026-03-11', range)).toBe(true);
++      expect(utcEvaluator.isDateInRange('2026-03-12', range)).toBe(true);
++      expect(utcEvaluator.isDateInRange('2026-03-13', range)).toBe(true);
++      expect(utcEvaluator.isDateInRange('2026-03-14', range)).toBe(true);
++      // Out of window should still be false
++      expect(utcEvaluator.isDateInRange('2026-03-09', range)).toBe(false);
++      expect(utcEvaluator.isDateInRange('2026-03-15', range)).toBe(false);
++    });
++
++    it('fixedBetween true with expand returns every day in window', () => {
++      const range = makeRange({
++        fixedBetween: true,
++        fromDate: '2026-03-10',
++        toDate: '2026-03-14',
++        everyWeekday: [1], // Monday — should be ignored
++      });
++      const from = new Date(2026, 2, 10); // March 10, 2026
++      const to = new Date(2026, 2, 14); // March 14, 2026
++      const occurrences = utcEvaluator.expand(range, from, to);
++      expect(occurrences).toHaveLength(5); // all 5 days
++    });
++
++    it('fixedBetween true still respects exceptDates', () => {
++      const range = makeRange({
++        fixedBetween: true,
++        fromDate: '2026-03-10',
++        toDate: '2026-03-14',
++        exceptDates: ['2026-03-12'],
++      });
++      expect(utcEvaluator.isDateInRange('2026-03-11', range)).toBe(true);
++      expect(utcEvaluator.isDateInRange('2026-03-12', range)).toBe(false); // excluded
++      expect(utcEvaluator.isDateInRange('2026-03-13', range)).toBe(true);
++
++      const from = new Date(2026, 2, 10);
++      const to = new Date(2026, 2, 14);
++      const occurrences = utcEvaluator.expand(range, from, to);
++      const dates = occurrences.map((o) => o.date);
++      expect(dates).toEqual(['2026-03-10', '2026-03-11', '2026-03-13', '2026-03-14']);
++    });
++
++    it('fixedBetween true still respects exceptBetween', () => {
++      const range = makeRange({
++        fixedBetween: true,
++        fromDate: '2026-03-10',
++        toDate: '2026-03-14',
++        exceptBetween: [['2026-03-11', '2026-03-13']],
++      });
++      expect(utcEvaluator.isDateInRange('2026-03-10', range)).toBe(true);
++      expect(utcEvaluator.isDateInRange('2026-03-11', range)).toBe(false); // excluded
++      expect(utcEvaluator.isDateInRange('2026-03-12', range)).toBe(false); // excluded
++      expect(utcEvaluator.isDateInRange('2026-03-13', range)).toBe(false); // excluded
++      expect(utcEvaluator.isDateInRange('2026-03-14', range)).toBe(true);
++
++      const from = new Date(2026, 2, 10);
++      const to = new Date(2026, 2, 14);
++      const occurrences = utcEvaluator.expand(range, from, to);
++      const dates = occurrences.map((o) => o.date);
++      expect(dates).toEqual(['2026-03-10', '2026-03-14']);
++    });
++
+     describe('edge cases', () => {
+       it('everyDate [31] skips months without 31 days', () => {
+         const range = makeRange({ everyDate: [31] });
+diff --git a/packages/core/__tests__/spans.test.ts b/packages/core/__tests__/spans.test.ts
+index f3f07d3..444828d 100644
+--- a/packages/core/__tests__/spans.test.ts
++++ b/packages/core/__tests__/spans.test.ts
+@@ -162,7 +162,6 @@ describe('computeSpans', () => {
+       everyWeekday: [1, 3, 5], // Mon, Wed, Fri
+       fromDate: '2026-03-23',
+       toDate: '2026-03-27',
+-      fixedBetween: true,
+     });
+ 
+     const spans = evaluator.computeSpans([range], new Date(2026, 2, 23), new Date(2026, 2, 27));
+diff --git a/packages/core/src/evaluator.ts b/packages/core/src/evaluator.ts
+index ff43f56..1769b07 100644
+--- a/packages/core/src/evaluator.ts
++++ b/packages/core/src/evaluator.ts
+@@ -24,6 +24,7 @@ interface CompiledRange {
+   monthLookup?: Uint8Array;
+   hasRecurrence: boolean;
+   hasTimeFields: boolean;
++  fixedBetween: boolean;
+ }
+ 
+ function buildLookup(size: number, values: readonly number[]): Uint8Array {
+@@ -72,6 +73,11 @@ export class RangeEvaluator {
+       return compiled.datesSet.has(dateStr);
+     }
+ 
++    // fixedBetween — match every day in the fromDate/toDate window
++    if (compiled.fixedBetween) {
++      return true;
++    }
++
+     // Recurrence patterns — if any are set, ALL set patterns must match (AND)
+     if (!compiled.hasRecurrence) {
+       // No day-level recurrence and no explicit dates — range applies to all days in bounds
+@@ -777,6 +783,15 @@ export class RangeEvaluator {
+       return []; // No overlap between range bounds and query window
+     }
+ 
++    // fixedBetween — return every day within the effective window
++    if (compiled.fixedBetween) {
++      const allDays = dateRange(effectiveFrom, effectiveTo);
++      if (!compiled.exceptDatesSet && !compiled.exceptBetween) {
++        return allDays;
++      }
++      return allDays.filter((day) => !this.isDateExcluded(day, compiled));
++    }
++
+     // Explicit dates — just filter to the window
+     if (compiled.dates) {
+       return compiled.dates.filter(
+@@ -964,6 +979,7 @@ export class RangeEvaluator {
+       ...(range.everyMonth ? { monthLookup: buildLookup(13, range.everyMonth) } : {}),
+       hasRecurrence: !!(range.everyWeekday || range.everyDate || range.everyMonth),
+       hasTimeFields: !!(range.everyHour || range.startTime),
++      fixedBetween: !!range.fixedBetween,
+     };
+ 
+     this.compiledRanges.set(range, compiled);
+diff --git a/packages/mcp/__tests__/tools.test.ts b/packages/mcp/__tests__/tools.test.ts
+index 0ddb590..236a12e 100644
+--- a/packages/mcp/__tests__/tools.test.ts
++++ b/packages/mcp/__tests__/tools.test.ts
+@@ -45,7 +45,6 @@ const testRanges: DateRange[] = [
+     duration: 60,
+     fromDate: '2026-03-01',
+     toDate: '2026-06-30',
+-    fixedBetween: true,
+   },
+ ];
+ 

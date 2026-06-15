@@ -23,38 +23,174 @@ defaultTest:
 
 tests:
   # ── daywatch-cal PR #35 ───────────────────────────────────────────────────
-  # add_load_calendar_url — diff at first commit, before review fixes applied
-  # Source of truth: umpire-bot review + sdougbrown replies in PR thread
-  - description: "daywatch-cal: load_calendar_url pre-review diff"
+  # add_load_calendar_url — first commit (pre-review), umpire-bot reviewer
+  # Notable: includes a false positive (BOM comment) that umpire-bot initially flagged
+  - description: "daywatch-cal pr35: load_calendar_url fetch implementation"
     vars:
       repo: daywatch-cal
       diff: "file://testdata/daywatch-cal-pr35.diff"
     assert:
       - type: llm-rubric
         value: |
-          Evaluate the review against this ground truth from the actual PR review:
+          Ground truth from umpire-bot review + author response:
 
-          REAL ISSUES (model should catch at least 2 of 3):
-          1. parseFeedUrl rewrites webcal: using regex on the raw input string — whitespace
-             around the URL can defeat the match, letting a webcal: URL reach the scheme
-             error instead of being rewritten. Should normalize via url.href first.
-          2. Error message for the webcal: scheme check is confusing — after the rewrite,
-             no webcal: input can reach that branch, so the message is dead code.
-          3. Test T5 (or equivalent default-window test) doesn't assert that the default
-             parse window is actually applied — it passes without window params but doesn't
-             verify getParseWindow() was invoked, giving false coverage confidence.
+          REAL ISSUES — catch ≥2:
+          1. parseFeedUrl rewrites webcal: via regex on raw input. Surrounding whitespace
+             defeats the match, letting a webcal: URL bypass rewrite and hit the scheme
+             error. Fix: normalize via url.href before the regex.
+          2. The webcal: scheme error branch is unreachable dead code after the rewrite runs.
+          3. Default parse window test passes without window params but doesn't assert
+             getParseWindow() was applied (coverage illusion).
 
-          KNOWN FALSE POSITIVE (model should NOT flag this as a bug):
-          - The comment claiming TextDecoder strips BOM is accurate: TextDecoder.decode()
-            removes a leading UTF-8 BOM by default. Flagging this as wrong is incorrect.
+          FALSE POSITIVE — do NOT flag as a bug:
+          - Comment claiming TextDecoder strips BOM is accurate. TextDecoder.decode()
+            removes a leading UTF-8 BOM by default. Asserting this comment is wrong = fail.
 
-          Score: PASS if the model catches ≥2 real issues AND does not confidently assert
-          the BOM comment is wrong. FAIL if it invents issues not in the diff, or misses
-          all 3 real issues.
+          PASS: catches ≥2 real issues and does not assert the BOM comment is wrong.
 
-  # Add more test cases here as you collect diffs. Pattern:
-  # 1. Find a merged PR where umpire-bot caught something
-  # 2. Get the pre-fix diff: gh api repos/sdougbrown/<repo>/compare/main...<first-commit-sha>
-  #    then curl the .diff URL
-  # 3. Add known_issues from the bot's comments + which were accepted vs dismissed
-  # - description: "avenor: ..."
+  # ── umpire-bot PR #26 ────────────────────────────────────────────────────
+  # Add review history navigation header — first commit, umpire-bot reviewer
+  # Notable: umpire-bot missed the nil dereference on first pass, caught it on second
+  - description: "umpire-bot pr26: review history navigation header"
+    vars:
+      repo: umpire-bot
+      diff: "file://testdata/umpire-bot-pr26.diff"
+    assert:
+      - type: llm-rubric
+        value: |
+          Ground truth from umpire-bot review (two passes):
+
+          REAL ISSUES caught first pass — catch ≥3:
+          1. buildReviewBodyWithNavigation lacks tests for error return, empty entries,
+             and populated entries paths.
+          2. listBotReviewNavigationEntries has untested paths: API error, pagination,
+             nil guards, and filtering logic.
+          3. TestHumanReviewState missing whitespace-only input case.
+          4. TestMergeCurrentReviewNavigationEntryAppendsMissing missing empty-slice path.
+          5. TestFormatReviewNavigation missing singular form ("1 bot review").
+
+          BONUS — umpire-bot missed this on first pass, caught on second:
+          - Nil dereference: .Time dereferenced on potentially nil *time.Time returned by
+            r.GetSubmittedAt(). Can panic at runtime.
+
+          PASS: catches ≥3 of the 5 test coverage issues. Bonus credit for the nil dereference.
+
+  # ── avenor PR #28 ────────────────────────────────────────────────────────
+  # Docs overhaul — first commit, umpire-bot reviewer
+  # Notable: groom security issue present but missed on first review pass
+  - description: "avenor pr28: docs overhaul, voice reference and template pack"
+    vars:
+      repo: avenor
+      diff: "file://testdata/avenor-pr28.diff"
+    assert:
+      - type: llm-rubric
+        value: |
+          Ground truth from umpire-bot review (two passes):
+
+          REAL ISSUES from first review — catch ≥1:
+          1. --timeout flag described as "in seconds" in avenor control spawn table but
+             correctly documented as Go duration (30s, 5m) in avenor run table. Inconsistency
+             will mislead users.
+          2. avenor answer command description doesn't note it's specific to the file-based
+             permission handler (not applicable to socket or auto-approve).
+
+          REAL ISSUES from second review (also present in original diff):
+          3. Groom agent has "allow: *" with no deny patterns — unlike jockey/horse/mule
+             which all restrict git push, curl, wget. Privilege escalation path if user
+             input influences commands delegated to groom.
+          4. Wrong event type names in README: references agent.message, tool.use,
+             run.complete — actual events are agent.message_chunk, tool.call, session.end.
+
+          PASS: catches ≥1 first-review issue. Bonus for catching the groom security issue
+          or wrong event type names, which umpire-bot only found on the second pass.
+
+  # ── avenor PR #34 ────────────────────────────────────────────────────────
+  # Pony parallel subagents + parent-child routing — first commit
+  # Notable: blocking race condition present from start, only caught on second review pass
+  - description: "avenor pr34: pony parallel subagents and parent-child routing"
+    vars:
+      repo: avenor
+      diff: "file://testdata/avenor-pr34.diff"
+    assert:
+      - type: llm-rubric
+        value: |
+          Ground truth from umpire-bot review (two passes on Go code):
+
+          REAL ISSUES from first review — catch ≥1:
+          1. sendToParentTool.Execute assumes runtimeID has been validated by control
+             server without local validation.
+          2. TestOrchestrationTools_spawnAgents uses identical fake session IDs across
+             spawned agents, masking bugs where unique IDs would be required.
+          3. RuntimeIDKeyType uses non-idiomatic context key pattern.
+
+          REAL ISSUES from second review (present in original commit):
+          4. Race condition: child.promptQueue accessed in RuntimeSendToParent timeout
+             goroutine closure without synchronization.
+          5. Timeout fallback reuses same requestID, causing the retry to silently fail.
+          6. WaitForDone has no unsubscription — leaks subscriber resources.
+
+          PASS: catches ≥1 first-review issue. Bonus for catching the race condition or
+          requestID reuse, which are the most serious issues and were missed first pass.
+
+  # ── avenor PR #30 ────────────────────────────────────────────────────────
+  # avenor watch --accumulate feature — first (and only feature) commit
+  - description: "avenor pr30: watch --accumulate de-interleave chunk partials"
+    vars:
+      repo: avenor
+      diff: "file://testdata/avenor-pr30.diff"
+    assert:
+      - type: llm-rubric
+        value: |
+          Ground truth from umpire-bot single-pass review (Go code):
+
+          REAL ISSUES — catch ≥1:
+          1. --accumulate flag silently ignored when --format json is set. The flag
+             help text says "plain format only" but there's no warning or error, just
+             silent no-op. Accepted fix: emit warning to stderr.
+          2. TrimRightFunc after ReplaceAllString is redundant — the regex already converts
+             line breaks to spaces, so TrimRightFunc can only trim trailing spaces.
+             strings.TrimSpace is simpler and equivalent.
+
+          ACCEPTED AS-IS (do not penalize model for flagging, but not required):
+          - extractSessionID handles both session_id and sessionID field names from
+            inconsistent upstream schema. Pragmatic defensive pattern; umpire-bot accepted
+            it but noted a comment would help.
+
+          PASS: catches ≥1 of the two real issues.
+
+  # ── daywatch-cal PR #20 ──────────────────────────────────────────────────
+  # fixedBetween semantics — first commit, complex TS+Rust cross-evaluator bugs
+  - description: "daywatch-cal pr20: fixedBetween semantics in TS and Rust evaluators"
+    vars:
+      repo: daywatch-cal
+      diff: "file://testdata/daywatch-cal-pr20.diff"
+    assert:
+      - type: llm-rubric
+        value: |
+          Ground truth from umpire-bot review (TS + Rust evaluator code):
+
+          REAL ISSUES — catch ≥1 (these are subtle cross-language bugs):
+          1. Internal precedence inconsistency: isDateInRange checks datesSet before
+             fixedBetween, but getCandidateDays checks fixedBetween before dates. A range
+             with both fields set produces different results from the two code paths.
+             Rust avoids this via enum variants (Explicit vs Range can't coexist).
+          2. TS-Rust semantic mismatch: in TS, fixedBetween is a flat optional field
+             available on all DateRange shapes. A consumer can write
+             { everyWeekday: [1], fixedBetween: true, fromDate: '...' } and TS honors it.
+             In Rust, the same JSON deserializes as DaySelector::Recurrence and fixedBetween
+             is silently discarded. Identical input produces different results across evaluators.
+          3. No test exercises fixedBetween + exceptBetween interaction in either evaluator.
+
+          PASS: catches ≥1 of the two cross-evaluator bugs. These require reading both
+          the TS and Rust code paths, so partial credit for catching the TS-only inconsistency.
+
+  # ── umpire/131 ────────────────────────────────────────────────────────────
+  # @umpire/async package — Greptile reviewer said "5/5, safe to merge, no blocking issues"
+  # At 8,496 diff lines this exceeds a single prompt. Excluded from automated eval.
+  # Manual use: chunk the diff by package and run separately. The interesting question
+  # is whether the model agrees with Greptile's clean verdict or finds something it missed.
+  #
+  # - description: "umpire pr131: @umpire/async package (Greptile clean verdict)"
+  #   vars:
+  #     repo: umpire-tools/umpire
+  #     diff: "file://testdata/umpire-pr131.diff"   # 8496 lines — too large for single call
