@@ -1,0 +1,18 @@
+# model-evals — compare local model candidates via promptfoo
+#
+# Run a specific eval:
+#   promptfoo eval -c evals/pr-review/promptfoo.yaml
+#
+# Run all evals:
+#   promptfoo eval
+#
+# View results:
+#   promptfoo view
+
+defaultTest:
+  options:
+    provider: openai:chat:qwen-moe  # baseline
+
+# Shared provider definitions — override with PROMPTFOO_* env vars if needed
+env:
+  GATEWAY_URL: http://localhost:4000/v1

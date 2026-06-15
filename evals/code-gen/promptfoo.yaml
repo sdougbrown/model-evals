@@ -1,0 +1,69 @@
+# Code generation eval — instruct variants, thinking disabled
+#
+# Mixes a small set of HumanEval-style problems with repo-specific tasks
+# that reflect what mule/instruct mode is actually used for in your stack.
+#
+# Scoring: contains-any for deterministic problems, llm-rubric for open-ended.
+
+description: "Code generation: instruct mode, thinking disabled"
+
+providers:
+  - id: openai:chat:qwen-moe-instruct
+    label: qwen-moe-instruct
+    config:
+      apiBaseUrl: "{{env.GATEWAY_URL}}"
+      apiKey: none
+      model: qwen-moe-instruct
+  - id: openai:chat:nex-mini-instruct
+    label: nex-mini-instruct
+    config:
+      apiBaseUrl: "{{env.GATEWAY_URL}}"
+      apiKey: none
+      model: nex-mini-instruct
+
+prompts:
+  - "{{task}}"
+
+defaultTest:
+  options:
+    judgeProvider: anthropic:messages:claude-sonnet-4-6
+
+tests:
+  - description: "fizzbuzz"
+    vars:
+      task: "Write a Go function FizzBuzz(n int) []string that returns FizzBuzz output for 1..n. Return only the function, no explanation."
+    assert:
+      - type: contains
+        value: "func FizzBuzz"
+      - type: llm-rubric
+        value: "The function correctly returns Fizz for multiples of 3, Buzz for multiples of 5, FizzBuzz for multiples of both, and the number as a string otherwise."
+
+  - description: "parse semver"
+    vars:
+      task: "Write a Go function ParseSemver(s string) (major, minor, patch int, err error) that parses a semver string like '1.2.3'. Return only the function."
+    assert:
+      - type: contains
+        value: "func ParseSemver"
+      - type: llm-rubric
+        value: "Correctly parses major/minor/patch integers and returns an error for malformed input."
+
+  - description: "mechanical refactor instruction"
+    vars:
+      task: |
+        Rename the function `processItems` to `handleItems` in the following Go code. Return only the modified code.
+
+        ```go
+        func processItems(items []string) error {
+            for _, item := range items {
+                if err := processItem(item); err != nil {
+                    return fmt.Errorf("processItems: %w", err)
+                }
+            }
+            return nil
+        }
+        ```
+    assert:
+      - type: contains
+        value: "func handleItems"
+      - type: not-contains
+        value: "func processItems"

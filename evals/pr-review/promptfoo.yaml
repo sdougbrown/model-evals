@@ -1,0 +1,57 @@
+# PR review quality eval — nex-mini vs qwen-moe
+#
+# Test cases are real diffs from local repos. Generate with:
+#   git diff main...<branch> > testdata/<repo>-<pr>.diff
+# or pull from closed PRs:
+#   gh pr diff <number> --repo <owner>/<repo> > testdata/<repo>-<pr>.diff
+#
+# Judge model: claude-sonnet (cloud) — set ANTHROPIC_API_KEY in env
+# or swap to a local model by changing judgeProvider below
+
+description: "PR review quality: issues spotted, false positives, actionability"
+
+providers:
+  - file://../../providers/local.yaml
+
+prompts:
+  - file://prompt.txt
+
+# LLM judge config — reused across all test cases
+defaultTest:
+  options:
+    judgeProvider: anthropic:messages:claude-sonnet-4-6
+
+tests:
+  # ── avenor diffs ──────────────────────────────────────────────────────────
+  - description: "avenor: classify event tags"
+    vars:
+      repo: avenor
+      diff: "file://testdata/avenor-classify-events.diff"
+      known_issues: |
+        - Missing test for the new classification branch
+        - No handling for unknown tag values (silent fallthrough)
+    assert:
+      - type: llm-rubric
+        value: |
+          The review must identify at least one of these known issues:
+          {{known_issues}}
+          It must not invent bugs that don't exist in the diff.
+          It should suggest concrete mitigations, not just flag problems.
+
+  # ── git-tend diffs ────────────────────────────────────────────────────────
+  - description: "git-tend: daemon restart logic"
+    vars:
+      repo: git-tend
+      diff: "file://testdata/git-tend-daemon-restart.diff"
+      known_issues: |
+        - Race condition between file watcher and restart goroutine
+        - Missing context cancellation on the old process before spawning new one
+    assert:
+      - type: llm-rubric
+        value: |
+          The review must identify at least one of these known issues:
+          {{known_issues}}
+          It must not invent bugs that don't exist in the diff.
+
+  # Add more test cases here as you collect diffs
+  # - description: "umpire-bot: ..."
