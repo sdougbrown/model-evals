@@ -1,4 +1,16 @@
-Review the following pull request diff from the {{repo}} repository.
+const fs = require('fs');
+const path = require('path');
+
+module.exports = async function ({ vars }) {
+  const diff = fs.readFileSync(
+    path.join(__dirname, 'testdata', vars.diff_file),
+    'utf8'
+  );
+
+  return [
+    {
+      role: 'user',
+      content: `Review the following pull request diff from the ${vars.repo} repository.
 
 Focus on:
 - Correctness: logic errors, off-by-ones, race conditions, missing edge cases
@@ -8,6 +20,9 @@ Focus on:
 
 Be specific — cite line numbers or function names. Do not invent issues that aren't visible in the diff. If you have no concerns, say so clearly rather than padding the review.
 
-```diff
-{{diff}}
-```
+\`\`\`diff
+${diff}
+\`\`\``,
+    },
+  ];
+};

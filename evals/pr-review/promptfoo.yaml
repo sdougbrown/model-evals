@@ -11,10 +11,21 @@
 description: "PR review quality: issues spotted, false positives, actionability"
 
 providers:
-  - file://../../providers/local.yaml
+  - id: openai:chat:qwen-moe
+    label: qwen-moe (NVFP4)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: qwen-moe
+  - id: openai:chat:nex-mini
+    label: nex-mini (NVFP4)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: nex-mini
 
 prompts:
-  - file://prompt.txt
+  - file://prompt.js
 
 # LLM judge config — reused across all test cases
 defaultTest:
@@ -28,7 +39,7 @@ tests:
   - description: "daywatch-cal pr35: load_calendar_url fetch implementation"
     vars:
       repo: daywatch-cal
-      diff: "file://testdata/daywatch-cal-pr35.diff"
+      diff_file: "daywatch-cal-pr35.diff"
     assert:
       - type: llm-rubric
         value: |
@@ -54,7 +65,7 @@ tests:
   - description: "umpire-bot pr26: review history navigation header"
     vars:
       repo: umpire-bot
-      diff: "file://testdata/umpire-bot-pr26.diff"
+      diff_file: "umpire-bot-pr26.diff"
     assert:
       - type: llm-rubric
         value: |
@@ -81,7 +92,7 @@ tests:
   - description: "avenor pr28: docs overhaul, voice reference and template pack"
     vars:
       repo: avenor
-      diff: "file://testdata/avenor-pr28.diff"
+      diff_file: "avenor-pr28.diff"
     assert:
       - type: llm-rubric
         value: |
@@ -110,7 +121,7 @@ tests:
   - description: "avenor pr34: pony parallel subagents and parent-child routing"
     vars:
       repo: avenor
-      diff: "file://testdata/avenor-pr34.diff"
+      diff_file: "avenor-pr34.diff"
     assert:
       - type: llm-rubric
         value: |
@@ -137,7 +148,7 @@ tests:
   - description: "avenor pr30: watch --accumulate de-interleave chunk partials"
     vars:
       repo: avenor
-      diff: "file://testdata/avenor-pr30.diff"
+      diff_file: "avenor-pr30.diff"
     assert:
       - type: llm-rubric
         value: |
@@ -163,7 +174,7 @@ tests:
   - description: "daywatch-cal pr20: fixedBetween semantics in TS and Rust evaluators"
     vars:
       repo: daywatch-cal
-      diff: "file://testdata/daywatch-cal-pr20.diff"
+      diff_file: "daywatch-cal-pr20.diff"
     assert:
       - type: llm-rubric
         value: |

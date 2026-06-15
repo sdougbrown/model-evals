@@ -4,27 +4,27 @@
 - id: openai:chat:qwen-moe
   label: qwen-moe (NVFP4)
   config:
-    apiBaseUrl: "{{env.GATEWAY_URL}}"
+    apiBaseUrl: "http://localhost:4000/v1"
     apiKey: none
     model: qwen-moe
 
 - id: openai:chat:nex-mini
   label: nex-mini (NVFP4)
   config:
-    apiBaseUrl: "{{env.GATEWAY_URL}}"
+    apiBaseUrl: "http://localhost:4000/v1"
     apiKey: none
     model: nex-mini
 
 - id: openai:chat:qwen-moe-instruct
   label: qwen-moe-instruct
   config:
-    apiBaseUrl: "{{env.GATEWAY_URL}}"
+    apiBaseUrl: "http://localhost:4000/v1"
     apiKey: none
     model: qwen-moe-instruct
 
 - id: openai:chat:nex-mini-instruct
   label: nex-mini-instruct
   config:
-    apiBaseUrl: "{{env.GATEWAY_URL}}"
+    apiBaseUrl: "http://localhost:4000/v1"
     apiKey: none
     model: nex-mini-instruct
