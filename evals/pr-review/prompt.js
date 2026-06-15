@@ -5,7 +5,9 @@ module.exports = async function ({ vars }) {
   const diff = fs.readFileSync(
     path.join(__dirname, 'testdata', vars.diff_file),
     'utf8'
-  );
+  // Escape Nunjucks delimiters — diff content may contain Go/Jinja template
+  // syntax like {{.Field}} that promptfoo re-renders through Nunjucks.
+  ).replace(/\{\{/g, '{ {').replace(/\}\}/g, '} }');
 
   return [
     {
