@@ -22,36 +22,39 @@ defaultTest:
     judgeProvider: anthropic:messages:claude-sonnet-4-6
 
 tests:
-  # ── avenor diffs ──────────────────────────────────────────────────────────
-  - description: "avenor: classify event tags"
+  # ── daywatch-cal PR #35 ───────────────────────────────────────────────────
+  # add_load_calendar_url — diff at first commit, before review fixes applied
+  # Source of truth: umpire-bot review + sdougbrown replies in PR thread
+  - description: "daywatch-cal: load_calendar_url pre-review diff"
     vars:
-      repo: avenor
-      diff: "file://testdata/avenor-classify-events.diff"
-      known_issues: |
-        - Missing test for the new classification branch
-        - No handling for unknown tag values (silent fallthrough)
+      repo: daywatch-cal
+      diff: "file://testdata/daywatch-cal-pr35.diff"
     assert:
       - type: llm-rubric
         value: |
-          The review must identify at least one of these known issues:
-          {{known_issues}}
-          It must not invent bugs that don't exist in the diff.
-          It should suggest concrete mitigations, not just flag problems.
+          Evaluate the review against this ground truth from the actual PR review:
 
-  # ── git-tend diffs ────────────────────────────────────────────────────────
-  - description: "git-tend: daemon restart logic"
-    vars:
-      repo: git-tend
-      diff: "file://testdata/git-tend-daemon-restart.diff"
-      known_issues: |
-        - Race condition between file watcher and restart goroutine
-        - Missing context cancellation on the old process before spawning new one
-    assert:
-      - type: llm-rubric
-        value: |
-          The review must identify at least one of these known issues:
-          {{known_issues}}
-          It must not invent bugs that don't exist in the diff.
+          REAL ISSUES (model should catch at least 2 of 3):
+          1. parseFeedUrl rewrites webcal: using regex on the raw input string — whitespace
+             around the URL can defeat the match, letting a webcal: URL reach the scheme
+             error instead of being rewritten. Should normalize via url.href first.
+          2. Error message for the webcal: scheme check is confusing — after the rewrite,
+             no webcal: input can reach that branch, so the message is dead code.
+          3. Test T5 (or equivalent default-window test) doesn't assert that the default
+             parse window is actually applied — it passes without window params but doesn't
+             verify getParseWindow() was invoked, giving false coverage confidence.
 
-  # Add more test cases here as you collect diffs
-  # - description: "umpire-bot: ..."
+          KNOWN FALSE POSITIVE (model should NOT flag this as a bug):
+          - The comment claiming TextDecoder strips BOM is accurate: TextDecoder.decode()
+            removes a leading UTF-8 BOM by default. Flagging this as wrong is incorrect.
+
+          Score: PASS if the model catches ≥2 real issues AND does not confidently assert
+          the BOM comment is wrong. FAIL if it invents issues not in the diff, or misses
+          all 3 real issues.
+
+  # Add more test cases here as you collect diffs. Pattern:
+  # 1. Find a merged PR where umpire-bot caught something
+  # 2. Get the pre-fix diff: gh api repos/sdougbrown/<repo>/compare/main...<first-commit-sha>
+  #    then curl the .diff URL
+  # 3. Add known_issues from the bot's comments + which were accepted vs dismissed
+  # - description: "avenor: ..."
