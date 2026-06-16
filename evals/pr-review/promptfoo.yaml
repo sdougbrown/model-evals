@@ -1,8 +1,11 @@
-# PR review quality eval — nex-mini vs qwen-moe
+# PR review quality eval — EXPERIMENTAL / BYOD
 #
-# Test cases are real diffs from local repos. Generate with:
+# Status: never got this working reliably. PR review is too multi-step for a
+# single promptfoo turn — the model needs repo context, call graph exploration,
+# tree-sitter analysis, etc. A longe/agentic eval harness is a better fit.
+#
+# testdata/ is gitignored — bring your own diffs:
 #   git diff main...<branch> > testdata/<repo>-<pr>.diff
-# or pull from closed PRs:
 #   gh pr diff <number> --repo <owner>/<repo> > testdata/<repo>-<pr>.diff
 #
 # Judge model: claude-sonnet (cloud) — set ANTHROPIC_API_KEY in env
@@ -10,19 +13,24 @@
 
 description: "PR review quality: issues spotted, false positives, actionability"
 
+evaluateOptions:
+  maxConcurrency: 2
+
 providers:
-  - id: openai:chat:qwen-moe
-    label: qwen-moe (NVFP4)
+  - id: openai:chat:qwen-moe-instruct
+    label: qwen-moe (NVFP4, no-think)
     config:
       apiBaseUrl: "http://localhost:4000/v1"
       apiKey: none
-      model: qwen-moe
-  - id: openai:chat:nex-mini
-    label: nex-mini (NVFP4)
+      model: qwen-moe-instruct
+      max_tokens: 4096
+  - id: openai:chat:nex-mini-instruct
+    label: nex-mini (Q4_K_XL, no-think)
     config:
       apiBaseUrl: "http://localhost:4000/v1"
       apiKey: none
-      model: nex-mini
+      model: nex-mini-instruct
+      max_tokens: 4096
 
 prompts:
   - file://prompt.js
@@ -60,31 +68,17 @@ tests:
           PASS: catches ≥2 real issues and does not assert the BOM comment is wrong.
 
   # ── umpire-bot PR #26 ────────────────────────────────────────────────────
-  # Add review history navigation header — first commit, umpire-bot reviewer
-  # Notable: umpire-bot missed the nil dereference on first pass, caught it on second
-  - description: "umpire-bot pr26: review history navigation header"
-    vars:
-      repo: umpire-bot
-      diff_file: "umpire-bot-pr26.diff"
-    assert:
-      - type: llm-rubric
-        value: |
-          Ground truth from umpire-bot review (two passes):
-
-          REAL ISSUES caught first pass — catch ≥3:
-          1. buildReviewBodyWithNavigation lacks tests for error return, empty entries,
-             and populated entries paths.
-          2. listBotReviewNavigationEntries has untested paths: API error, pagination,
-             nil guards, and filtering logic.
-          3. TestHumanReviewState missing whitespace-only input case.
-          4. TestMergeCurrentReviewNavigationEntryAppendsMissing missing empty-slice path.
-          5. TestFormatReviewNavigation missing singular form ("1 bot review").
-
-          BONUS — umpire-bot missed this on first pass, caught on second:
-          - Nil dereference: .Time dereferenced on potentially nil *time.Time returned by
-            r.GetSubmittedAt(). Can panic at runtime.
-
-          PASS: catches ≥3 of the 5 test coverage issues. Bonus credit for the nil dereference.
+  # DISABLED: compare URL returns empty for merged commits; gh pr diff gives final
+  # fixed state (not pre-review). Need repo cloned locally to reconstruct.
+  # - description: "umpire-bot pr26: review history navigation header"
+  #   vars:
+  #     repo: umpire-bot
+  #     diff_file: "umpire-bot-pr26.diff"
+  #   assert:
+  #     - type: llm-rubric
+  #       value: |
+  #         Ground truth: 5 test coverage gaps + nil dereference missed on first pass.
+  #         See PR #26 comments for details. Re-enable once pre-fix diff is recovered.
 
   # ── avenor PR #28 ────────────────────────────────────────────────────────
   # Docs overhaul — first commit, umpire-bot reviewer

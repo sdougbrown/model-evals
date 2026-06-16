@@ -1,0 +1,74 @@
+# CRUXEval-O — code output prediction
+#
+# Self-contained: each test is a Python function + input, assert on return value.
+# No repo context, no external tools needed. Good baseline for raw code reasoning.
+#
+# Generate test cases first:
+#   pip install datasets
+#   python3 generate.py [--n 50] [--seed 42]
+#
+# Then run:
+#   promptfoo eval -c promptfoo.yaml
+#
+# Scoring: pass@1 (exact string match after stripping markdown fences).
+# Leaderboard reference: GPT-4o ~74%, Qwen2.5-72B ~71%, Llama-3.1-70B ~64%.
+
+description: "CRUXEval-O: predict Python function output (pass@1)"
+
+evaluateOptions:
+  maxConcurrency: 3
+
+providers:
+  - id: openai:chat:qwen-moe-instruct
+    label: qwen-moe (no-think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: qwen-moe-instruct
+      max_tokens: 128
+
+  - id: openai:chat:qwen-moe
+    label: qwen-moe (think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: qwen-moe
+      max_tokens: 2048
+
+  - id: openai:chat:nex-mini-instruct
+    label: nex-mini (no-think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: nex-mini-instruct
+      max_tokens: 128
+
+  - id: openai:chat:nex-mini
+    label: nex-mini (think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: nex-mini
+      max_tokens: 2048
+
+  - id: openai:chat:gemma4
+    label: gemma4 (prod)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: gemma4
+      max_tokens: 512
+
+prompts:
+  - |
+    You are given a Python function. Determine what it returns when called with the provided input.
+
+    ```python
+    {{code}}
+    ```
+
+    What does `{{input}}` return?
+
+    Respond with ONLY the Python literal return value — for example: `42`, `'hello'`, `[1, 2, 3]`, `None`, `True`. No explanation, no code block, just the value.
+
+tests: file://tests.yaml

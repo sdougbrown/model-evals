@@ -1,0 +1,3 @@
+.venv/
+evals/cruxeval/tests.yaml
+evals/pr-review/testdata/*.diff

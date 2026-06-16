@@ -1,0 +1,707 @@
+- description: 'cruxeval-o: sample_6'
+  vars:
+    code: "def f(dic):\n    for k,v in sorted(dic.items(), key=lambda x: len(str(x)))[:-1]:\n\
+      \        dic.pop(k)\n    return list(dic.items())"
+    input: '{''11'': 52, ''65'': 34, ''a'': 12, ''4'': 52, ''74'': 31}'
+    expected_output: '[(''74'', 31)]'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_25'
+  vars:
+    code: "def f(d):\n    d = d.copy()\n    d.popitem()\n    return d"
+    input: '{"l": 1, "t": 2, "x:": 3}'
+    expected_output: '{''l'': 1, ''t'': 2}'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_27'
+  vars:
+    code: "def f(w):\n    ls = list(w)\n    omw = ''\n    while len(ls) > 0:\n   \
+      \     omw += ls.pop(0)\n        if len(ls) * 2 > len(w):\n            return\
+      \ w[len(ls):] == omw\n    return False"
+    input: '''flak'''
+    expected_output: 'False'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_30'
+  vars:
+    code: "def f(array):\n    result = []\n    for elem in array:\n        if elem.isascii()\
+      \ or (isinstance(elem, int) and not str(abs(elem)).isascii()):\n           \
+      \ result.append(elem)\n    return result"
+    input: '["a", "b", "c"]'
+    expected_output: '[''a'', ''b'', ''c'']'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_32'
+  vars:
+    code: "def f(s, sep):\n    reverse = ['*' + e for e in s.split(sep)]\n    return\
+      \ ';'.join(reversed(reverse))"
+    input: '''volume'', ''l'''
+    expected_output: '''*ume;*vo'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_89'
+  vars:
+    code: "def f(char):\n    if char not in 'aeiouAEIOU':\n        return None\n \
+      \   if char in 'AEIOU':\n        return char.lower()\n    return char.upper()"
+    input: '''o'''
+    expected_output: '''O'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_94'
+  vars:
+    code: "def f(a, b):\n    return {**a, **b}"
+    input: '{''w'': 5, ''wi'': 10}, {''w'': 3}'
+    expected_output: '{''w'': 3, ''wi'': 10}'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_95'
+  vars:
+    code: "def f(zoo):\n    return dict((v, k) for k, v in zoo.items())"
+    input: '{''AAA'': ''fr''}'
+    expected_output: '{''fr'': ''AAA''}'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_99'
+  vars:
+    code: "def f(text, sep, num):\n    return '___'.join(text.rsplit(sep, num))"
+    input: '''aa+++bb'', ''+'', 1'
+    expected_output: '''aa++___bb'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_104'
+  vars:
+    code: "def f(text):\n    dic = dict()\n    for char in text:\n        dic[char]\
+      \ = dic.get(char, 0) + 1\n    for key in dic:\n        if dic[key] > 1:\n  \
+      \          dic[key] = 1\n    return dic"
+    input: '"a"'
+    expected_output: '{''a'': 1}'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_114'
+  vars:
+    code: "def f(text, sep):\n    return text.rsplit(sep, maxsplit=2)"
+    input: '"a-.-.b", "-."'
+    expected_output: '[''a'', '''', ''b'']'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_142'
+  vars:
+    code: "def f(x):\n    if x.islower():\n        return x\n    else:\n        return\
+      \ x[::-1]"
+    input: '''ykdfhp'''
+    expected_output: '''ykdfhp'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_159'
+  vars:
+    code: "def f(st):\n    swapped = ''\n    for ch in reversed(st):\n        swapped\
+      \ += ch.swapcase()\n    return swapped"
+    input: '''RTiGM'''
+    expected_output: '''mgItr'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_163'
+  vars:
+    code: "def f(text, space_symbol, size):\n    spaces = ''.join(space_symbol for\
+      \ i in range(size-len(text)))\n    return text + spaces"
+    input: '''w'', ''))'', 7'
+    expected_output: '''w))))))))))))'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_203'
+  vars:
+    code: "def f(d):\n    d.clear()\n    return d"
+    input: '{''a'': 3, ''b'': -1, ''c'': ''Dum''}'
+    expected_output: '{}'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_220'
+  vars:
+    code: "def f(text, m, n):\n    text = \"{}{}{}\".format(text, text[:m], text[n:])\n\
+      \    result = \"\"\n    for i in range(n, len(text)-m):\n        result = text[i]\
+      \ + result\n    return result"
+    input: '"abcdefgabc", 1, 2'
+    expected_output: '''bagfedcacbagfedc'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_223'
+  vars:
+    code: "def f(array, target):\n    count, i = 0, 1\n    for j in range(1, len(array)):\n\
+      \        if ((array[j] > array[j-1]) and (array[j] <= target)): count += i\n\
+      \        elif array[j] <= array[j-1]: i = 1\n        else: i += 1\n    return\
+      \ count"
+    input: '[1, 2, -1, 4], 2'
+    expected_output: '1'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_225'
+  vars:
+    code: "def f(text):\n    if text.islower():\n        return True\n    return False"
+    input: '"54882"'
+    expected_output: 'False'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_228'
+  vars:
+    code: "def f(text, splitter):\n    return splitter.join(text.lower().split())"
+    input: '''LlTHH sAfLAPkPhtsWP'', ''#'''
+    expected_output: '''llthh#saflapkphtswp'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_238'
+  vars:
+    code: "def f(ls, n):\n    answer = 0\n    for i in ls:\n        if i[0] == n:\n\
+      \            answer = i\n    return answer"
+    input: '[[1, 9, 4], [83, 0, 5], [9, 6, 100]], 1'
+    expected_output: '[1, 9, 4]'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_250'
+  vars:
+    code: "def f(text):\n    count = len(text)\n    for i in range(-count+1, 0):\n\
+      \        text = text + text[i]\n    return text"
+    input: '''wlace A'''
+    expected_output: '''wlace Alc l  '''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_270'
+  vars:
+    code: "def f(dic):\n    d = {}\n    for key in dic:\n        d[key] = dic.popitem(last\
+      \ = False)[1]\n    return d"
+    input: '{}'
+    expected_output: '{}'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_281'
+  vars:
+    code: "def f(c, index, value):\n    c[index] = value\n    if value >= 3:\n   \
+      \     c.update({'message' : 'xcrWt'})\n    else: \n        del c['message']\n\
+      \    return c"
+    input: '{1: 2, 3: 4, 5: 6, ''message'': ''qrTHo''}, 8, 2'
+    expected_output: '{1: 2, 3: 4, 5: 6, 8: 2}'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_284'
+  vars:
+    code: "def f(text, prefix):\n    idx = 0\n    for letter in prefix:\n        if\
+      \ text[idx] != letter:\n            return None\n        idx += 1\n    return\
+      \ text[idx:]"
+    input: '''bestest'', ''bestest'''
+    expected_output: ''''''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_344'
+  vars:
+    code: "def f(list, operation):\n    new_list = list[:]\n    new_list.sort()\n\
+      \    operation(new_list)\n    return list"
+    input: '[6, 4, 2, 8, 15], (lambda x: x.reverse())'
+    expected_output: '[6, 4, 2, 8, 15]'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_348'
+  vars:
+    code: "def f(dictionary):\n    return dictionary.copy()"
+    input: '{563: 555, 133: None}'
+    expected_output: '{563: 555, 133: None}'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_352'
+  vars:
+    code: "def f(nums):\n    return nums[len(nums)//2]"
+    input: '[-1, -3, -5, -7, 0]'
+    expected_output: '-5'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_367'
+  vars:
+    code: "def f(nums, rmvalue):\n    res = nums[:]\n    while rmvalue in res:\n \
+      \       popped = res.pop(res.index(rmvalue))\n        if popped != rmvalue:\n\
+      \            res.append(popped)\n    return res"
+    input: '[6, 2, 1, 1, 4, 1], 5'
+    expected_output: '[6, 2, 1, 1, 4, 1]'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_389'
+  vars:
+    code: "def f(total, arg):\n    if type(arg) is list:\n        for e in arg:\n\
+      \            total.extend(e)\n    else:\n        total.extend(arg)\n    return\
+      \ total"
+    input: '[1, 2, 3], ''nammo'''
+    expected_output: '[1, 2, 3, ''n'', ''a'', ''m'', ''m'', ''o'']'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_429'
+  vars:
+    code: "def f(d):\n    result = []\n    while len(d.keys()) > 0:\n        result.append(d.popitem())\n\
+      \    return result"
+    input: '{5: 1, ''abc'': 2, ''defghi'': 2, 87.29: 3}'
+    expected_output: '[(87.29, 3), (''defghi'', 2), (''abc'', 2), (5, 1)]'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_432'
+  vars:
+    code: "def f(length, text):\n    if len(text) == length:\n        return text[::-1]\n\
+      \    return False"
+    input: -5, 'G5ogb6f,c7e.EMm'
+    expected_output: 'False'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_459'
+  vars:
+    code: "def f(arr, d):\n    for i in range(1, len(arr), 2):\n        d.update({arr[i]:\
+      \ arr[i-1]})\n\n    return d"
+    input: '[''b'', ''vzjmc'', ''f'', ''ae'', ''0''], dict()'
+    expected_output: '{''vzjmc'': ''b'', ''ae'': ''f''}'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_517'
+  vars:
+    code: "def f(text):\n    for i in range(len(text)-1, 0, -1):\n        if not text[i].isupper():\n\
+      \            return text[0:i]\n    return ''"
+    input: '''SzHjifnzog'''
+    expected_output: '''SzHjifnzo'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_558'
+  vars:
+    code: "def f(nums, mos):\n    for num in mos:\n        nums.pop(nums.index(num))\n\
+      \    nums.sort()\n    for num in mos:\n        nums += [num]\n    for i in range(len(nums)-1):\n\
+      \        if nums[i] > nums[i+1]:\n            return False\n    return True"
+    input: '[3, 1, 2, 1, 4, 1], [1]'
+    expected_output: 'False'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_574'
+  vars:
+    code: "def f(simpons):\n    while simpons:\n        pop = simpons.pop()\n    \
+      \    if pop == pop.title():\n            return pop\n    return pop"
+    input: '[''George'', ''Michael'', ''George'', ''Costanza'']'
+    expected_output: '''Costanza'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_603'
+  vars:
+    code: "def f(sentences):\n    if all([sentence.isdecimal() for sentence in sentences.split('.')]):\n\
+      \        return 'oscillating' \n    else:\n        return 'not oscillating'"
+    input: '''not numbers'''
+    expected_output: '''not oscillating'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_604'
+  vars:
+    code: "def f(text, start):\n    return text.startswith(start)"
+    input: '"Hello world", "Hello"'
+    expected_output: 'True'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_616'
+  vars:
+    code: "def f(body):\n    ls = list(body)\n    dist = 0\n    for i in range(0,\
+      \ len(ls) - 1):\n        if ls[i - 2 if i - 2 >= 0 else 0] == '\\t':\n     \
+      \       dist += (1 + ls[i - 1].count('\\t')) * 3\n        ls[i] = '[' + ls[i]\
+      \ + ']'\n    return ''.join(ls).expandtabs(4 + dist)"
+    input: '''\n\ny\n'''
+    expected_output: '''[\n][\n][y]\n'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_618'
+  vars:
+    code: "def f(match, fill, n):\n    return fill[:n] + match"
+    input: '''9'', ''8'', 2'
+    expected_output: '''89'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_654'
+  vars:
+    code: "def f(s, from_c, to_c):\n    table = s.maketrans(from_c, to_c)\n    return\
+      \ s.translate(table)"
+    input: '''aphid'', ''i'', ''?'''
+    expected_output: '''aph?d'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_665'
+  vars:
+    code: "def f(chars):\n    s = \"\"\n    for ch in chars:\n        if chars.count(ch)\
+      \ % 2 == 0:\n            s += ch.upper()\n        else:\n            s += ch\n\
+      \    return s"
+    input: '"acbced"'
+    expected_output: '''aCbCed'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_692'
+  vars:
+    code: "def f(array):\n    a = []\n    array.reverse()\n    for i in range(len(array)):\n\
+      \        if array[i] != 0:\n            a.append(array[i])\n    a.reverse()\n\
+      \    return a"
+    input: '[]'
+    expected_output: '[]'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_714'
+  vars:
+    code: "def f(array):\n    array.reverse()\n    array.clear()\n    array.extend('x'*len(array))\n\
+      \    array.reverse()\n    return array"
+    input: '[3, -2, 0]'
+    expected_output: '[]'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_718'
+  vars:
+    code: "def f(text):\n    t = text\n    for i in text:\n        text = text.replace(i,\
+      \ '')\n    return str(len(text)) + t"
+    input: '''ThisIsSoAtrocious'''
+    expected_output: '''0ThisIsSoAtrocious'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_733'
+  vars:
+    code: "def f(text):\n    length = len(text) // 2\n    left_half = text[:length]\n\
+      \    right_half = text[length:][::-1]\n    return left_half + right_half"
+    input: '''n'''
+    expected_output: '''n'''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_754'
+  vars:
+    code: "def f(nums):\n    nums = ['{0:{fill}>{width}}'.format(val, **{'fill': '0',\
+      \ 'width': nums[0]}) for val in nums[1:]]\n    return [str(val) for val in nums]"
+    input: '[''1'', ''2'', ''2'', ''44'', ''0'', ''7'', ''20257'']'
+    expected_output: '[''2'', ''2'', ''44'', ''0'', ''7'', ''20257'']'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_758'
+  vars:
+    code: "def f(nums):\n    if nums[::-1] == nums:\n        return True\n    return\
+      \ False"
+    input: '[0, 3, 6, 2]'
+    expected_output: 'False'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_759'
+  vars:
+    code: "def f(text, sub):\n    index = []\n    starting = 0\n    while starting\
+      \ != -1:\n        starting = text.find(sub, starting)\n        if starting !=\
+      \ -1:\n            index.append(starting)\n            starting += len(sub)\n\
+      \    return index"
+    input: '''egmdartoa'', ''good'''
+    expected_output: '[]'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_777'
+  vars:
+    code: "def f(names, excluded):\n    excluded = excluded\n    for i in range(len(names)):\n\
+      \        if excluded in names[i]:\n            names[i] = names[i].replace(excluded,\
+      \ \"\")\n    return names"
+    input: '["avc  a .d e"], ""'
+    expected_output: '[''avc  a .d e'']'
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
+- description: 'cruxeval-o: sample_781'
+  vars:
+    code: "def f(s, ch):\n    if ch not in s:\n        return ''\n    s = s.partition(ch)[2][::-1]\n\
+      \    for i in range(len(s)):\n        s = s.partition(ch)[2][::-1]\n    return\
+      \ s"
+    input: '''shivajimonto6'', ''6'''
+    expected_output: ''''''
+  assert:
+  - type: javascript
+    value: (() => { let got = output.trim()   .replace(/^```[\w]*\n?/m,'').replace(/\n?```$/m,'').trim();
+      const lines = got.split('\n').map(l=>l.trim()).filter(Boolean); if (lines.length
+      > 1) got = lines[lines.length-1]; got = got.replace(/^`([^`]+)`$/,'$1').trim();
+      const exp = context.vars.expected_output.trim(); if (got === exp) return true;
+      const nq = s => s.replace(/"/g,"'"); if (nq(got) === nq(exp)) return true; return
+      false; })()
