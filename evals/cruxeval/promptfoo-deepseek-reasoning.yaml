@@ -1,0 +1,47 @@
+# CRUXEval-O — deepseek-flash with varying reasoning_effort (10-test subset)
+description: "CRUXEval-O: deepseek-flash reasoning_effort comparison"
+
+evaluateOptions:
+  maxConcurrency: 3
+
+providers:
+  - id: openai:chat:deepseek-flash
+    label: deepseek-flash (no-reasoning)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: deepseek-flash
+      max_tokens: 256
+      reasoning_effort: "none"
+
+  - id: openai:chat:deepseek-flash
+    label: deepseek-flash (reasoning-high)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: deepseek-flash
+      max_tokens: 2048
+      reasoning_effort: "high"
+
+  - id: openai:chat:deepseek-flash
+    label: deepseek-flash (reasoning-max)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: deepseek-flash
+      max_tokens: 2048
+      reasoning_effort: "max"
+
+prompts:
+  - |
+    You are given a Python function. Determine what it returns when called with the provided input.
+
+    ```python
+    {{code}}
+    ```
+
+    What does `{{input}}` return?
+
+    Respond with ONLY the Python literal return value — for example: `42`, `'hello'`, `[1, 2, 3]`, `None`, `True`. No explanation, no code block, just the value.
+
+tests: file://tests-10.yaml

@@ -1,0 +1,36 @@
+# CRUXEval-O — laguna only
+description: "CRUXEval-O: predict Python function output (pass@1)"
+
+evaluateOptions:
+  maxConcurrency: 3
+
+providers:
+  - id: openai:chat:laguna
+    label: laguna (think)
+    config:
+      apiBaseUrl: "http://sparky:4000/v1"
+      apiKey: none
+      model: laguna
+      max_tokens: 2048
+
+  - id: openai:chat:laguna-instruct
+    label: laguna-instruct (no-think)
+    config:
+      apiBaseUrl: "http://sparky:4000/v1"
+      apiKey: none
+      model: laguna-instruct
+      max_tokens: 128
+
+prompts:
+  - |
+    You are given a Python function. Determine what it returns when called with the provided input.
+
+    ```python
+    {{code}}
+    ```
+
+    What does `{{input}}` return?
+
+    Respond with ONLY the Python literal return value — for example: `42`, `'hello'`, `[1, 2, 3]`, `None`, `True`. No explanation, no code block, just the value.
+
+tests: file://tests.yaml
