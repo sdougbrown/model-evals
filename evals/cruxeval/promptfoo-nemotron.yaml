@@ -1,0 +1,37 @@
+# CRUXEval-O — nemotron light run (10-test subset) on sparky
+# nemotron = thinking, nemotron-instruct = non-thinking
+description: "CRUXEval-O: nemotron vs nemotron-instruct (light, pass@1)"
+
+evaluateOptions:
+  maxConcurrency: 3
+
+providers:
+  - id: openai:chat:nemotron
+    label: nemotron (think)
+    config:
+      apiBaseUrl: "http://sparky:4000/v1"
+      apiKey: none
+      model: nemotron
+      max_tokens: 8192
+
+  - id: openai:chat:nemotron-instruct
+    label: nemotron-instruct (no-think)
+    config:
+      apiBaseUrl: "http://sparky:4000/v1"
+      apiKey: none
+      model: nemotron-instruct
+      max_tokens: 256
+
+prompts:
+  - |
+    You are given a Python function. Determine what it returns when called with the provided input.
+
+    ```python
+    {{code}}
+    ```
+
+    What does `{{input}}` return?
+
+    Respond with ONLY the Python literal return value — for example: `42`, `'hello'`, `[1, 2, 3]`, `None`, `True`. No explanation, no code block, just the value.
+
+tests: file://tests-10.yaml

@@ -1,0 +1,254 @@
+# Classifier eval — does the model correctly classify umpire-bot re-review findings?
+#
+# Each case is a real finding from an avenor PR with known classification.
+# Source: umpire-bot comment threads on avenor/28 and avenor/34.
+#
+# Ground truth classification is what umpire-bot's Go classifier would produce
+# per the disposition rules in rereview-classifier-system.md.
+#
+# Judge model: not used — assertions are deterministic JSON field checks.
+# Run: promptfoo eval -c promptfoo.yaml
+
+description: "Classifier: finding re-classification (fixed / still_valid + disposition)"
+
+evaluateOptions:
+  maxConcurrency: 3
+
+providers:
+  - id: openai:chat:nemotron
+    label: nemotron (think)
+    config:
+      apiBaseUrl: "http://sparky:4000/v1"
+      apiKey: none
+      model: nemotron
+      max_tokens: 8192
+
+  - id: openai:chat:nemotron-instruct
+    label: nemotron-instruct (no-think)
+    config:
+      apiBaseUrl: "http://sparky:4000/v1"
+      apiKey: none
+      model: nemotron-instruct
+      max_tokens: 1024
+
+
+prompts:
+  - file://prompt.js
+
+tests:
+  # ── Case 1: fixed / no_action ─────────────────────────────────────────────
+  # avenor/28 — --timeout description corrected in fix commit 64935e1.
+  # Current docs show "Go duration" language; discussion confirms fix.
+  - description: "avenor/28: --timeout 'in seconds' description — fixed in doc update"
+    vars:
+      finding_id: "3300055955"
+      finding_path: "docs/cli.md"
+      finding_created: "2026-05-25T21:42:45Z"
+      finding_body: >-
+        The `--timeout` description says "Overall session timeout in seconds",
+        but this flag accepts a Go duration (same as `avenor run` line 44:
+        `30s`, `5m`, etc.). Passing a bare integer like `60` will not work
+        as expected.
+      current_code: |
+        | `--timeout` | `0` (disabled) | Overall session timeout (Go duration: `30s`, `5m`, etc.); fires after duration regardless of progress |
+        | `--progress-timeout` | `0` (disabled) | Session progress timeout; fires if no event received for this duration |
+      discussion:
+        - author: "sdougbrown"
+          body: >-
+            `👾 AI Agent` Fixed — changed to "Overall session timeout
+            (Go duration: `30s`, `5m`, etc.)" in 64935e1.
+    assert:
+      - type: javascript
+        value: "output.includes('\"classification\": \"fixed\"') || output.includes('\"classification\":\"fixed\"')"
+      - type: javascript
+        value: "output.includes('\"disposition\": \"no_action\"') || output.includes('\"disposition\":\"no_action\"')"
+
+  # ── Case 2: fixed / no_action ─────────────────────────────────────────────
+  # avenor/34 — WaitForDone subscription leak fixed with subCtx/cancel in 7e63102.
+  - description: "avenor/34: WaitForDone subscription leak — fixed with scoped context"
+    vars:
+      finding_id: "3322114846"
+      finding_path: "internal/runtime/pony/config.go"
+      finding_line: "130"
+      finding_created: "2026-06-01T00:00:00Z"
+      finding_body: >-
+        `WaitForDone` subscribes with `SubscribeRuntime(ctx, sessionID)` but
+        never unsubscribes or closes the subscription after returning.
+        This leaks subscriber resources on the client side over time.
+      current_code: |
+        func (e *controlSocketExecutor) WaitForDone(ctx context.Context, sessionID string) (*runtime.AgentResult, error) {
+        	subCtx, cancel := context.WithCancel(ctx)
+        	defer cancel()
+        	sub := e.client.SubscribeRuntime(subCtx, sessionID)
+        	for evt := range sub {
+        		if evt.Event == "session.end" {
+        			stopReason, _ := evt.Raw["stop_reason"].(string)
+        			exitCode := 0
+        			if ec, ok := evt.Raw["exit_code"].(float64); ok {
+        				exitCode = int(ec)
+        			}
+      discussion:
+        - author: "sdougbrown"
+          body: >-
+            `👾 AI Agent` Fixed in 7e63102. `WaitForDone` now creates a scoped
+            subscription context (`subCtx`) and calls `cancel()` on return,
+            which unregisters/closes the runtime subscription promptly and
+            avoids subscriber buildup.
+    assert:
+      - type: javascript
+        value: "output.includes('\"classification\": \"fixed\"') || output.includes('\"classification\":\"fixed\"')"
+      - type: javascript
+        value: "output.includes('\"disposition\": \"no_action\"') || output.includes('\"disposition\":\"no_action\"')"
+
+  # ── Case 3: still_valid / accepted ────────────────────────────────────────
+  # avenor/34 — spawnAgents description says "concurrently" but loop is sequential.
+  # User gave an explicit design rationale: RPC is sequential, runtime execution
+  # is concurrent. Finding description is technically accurate but accepted.
+  - description: "avenor/34: spawnAgents 'concurrently' vs sequential loop — design rationale"
+    vars:
+      finding_id: "3322011710"
+      finding_path: "internal/runtime/pony/agent_tools.go"
+      finding_line: "111"
+      finding_created: "2026-06-01T00:00:00Z"
+      finding_body: >-
+        spawnAgentsTool runs agents sequentially in a for loop despite the
+        description saying 'All agents run concurrently.'
+      current_code: |
+        func (t *spawnAgentsTool) Description() string {
+        	return "Create multiple child agent sessions in a single call. All agents run concurrently. Returns session IDs with labels for each spawned agent."
+        }
+        // ... Execute method:
+        	for _, agent := range input.Agents {
+        		sessionID, err := t.executor.SpawnAgent(ctx, params)
+        		if err != nil {
+        			return "", fmt.Errorf("spawn_agents: %w", err)
+        		}
+        		parts = append(parts, desc)
+        	}
+        	return "Spawned agents: [" + strings.Join(parts, ", ") + "]", nil
+      discussion:
+        - author: "sdougbrown"
+          body: >-
+            `👾 AI Agent` Leaving as-is by design. `spawn_agents` dispatches
+            spawn RPCs sequentially, but each spawned runtime starts immediately
+            and runs concurrently in the supervisor. The wording "run concurrently"
+            describes runtime execution, not concurrent client-side RPC issuance.
+    assert:
+      - type: javascript
+        value: "output.includes('\"classification\": \"still_valid\"') || output.includes('\"classification\":\"still_valid\"')"
+      - type: javascript
+        value: "output.includes('\"disposition\": \"accepted\"') || output.includes('\"disposition\":\"accepted\"')"
+
+  # ── Case 4: still_valid / accepted ────────────────────────────────────────
+  # avenor/34 — partial failure in spawn_agents accepted for PR scope.
+  # Code still has no rollback; user explicitly accepted with follow-up note.
+  - description: "avenor/34: spawnAgents partial failure — accepted with follow-up tracking"
+    vars:
+      finding_id: "3322114811"
+      finding_path: "internal/runtime/pony/agent_tools.go"
+      finding_line: "157"
+      finding_created: "2026-06-01T00:00:00Z"
+      finding_body: >-
+        `spawnAgentsTool.Execute` has partial failure semantics: if agent N
+        fails to spawn, agents 0..N-1 are already spawned with no way to
+        roll them back.
+      current_code: |
+        	for _, agent := range input.Agents {
+        		sessionID, err := t.executor.SpawnAgent(ctx, params)
+        		if err != nil {
+        			return "", fmt.Errorf("spawn_agents: %w", err)
+        		}
+        		desc := sessionID
+        		if agent.Label != "" {
+        			desc = sessionID + "=" + agent.Label
+        		}
+        		parts = append(parts, desc)
+        	}
+      discussion:
+        - author: "sdougbrown"
+          body: >-
+            `👾 AI Agent` Accepting as-is for this PR scope. Partial failure
+            semantics in `spawn_agents` are currently intentional: each spawn
+            is an independent RPC and previously spawned runtimes keep running.
+            We can track rollback/cancellation semantics as a follow-up
+            enhancement if desired.
+    assert:
+      - type: javascript
+        value: "output.includes('\"classification\": \"still_valid\"') || output.includes('\"classification\":\"still_valid\"')"
+      - type: javascript
+        value: "output.includes('\"disposition\": \"accepted\"') || output.includes('\"disposition\":\"accepted\"')"
+
+  # ── Case 5: still_valid / accepted ────────────────────────────────────────
+  # avenor/34 — user claims false positive with technical rationale.
+  # Tricky: code pattern still exists (closure captures requestID), but user's
+  # argument (not reassigned after capture) is technically valid.
+  # Rule: code evidence shows pattern exists → still_valid.
+  # Rule: discussion gives concrete rationale → accepted.
+  - description: "avenor/34: requestID timer closure — user claims false positive, accepted"
+    vars:
+      finding_id: "3322011750"
+      finding_path: "internal/stable/supervisor.go"
+      finding_line: "1343"
+      finding_created: "2026-06-01T00:00:00Z"
+      finding_body: >-
+        Race condition in RuntimeSendToParent timer closure: the `requestID`
+        variable is captured by reference in the `time.AfterFunc` closure.
+      current_code: |
+        	s.controlMu.Lock()
+        	s.childQuestionSeq++
+        	requestID := fmt.Sprintf("cq_%d", s.childQuestionSeq)
+        	// ... setup pendingQuestions ...
+        	timer := time.AfterFunc(s.childQuestionTimeout, func() {
+        		s.controlMu.Lock()
+        		pq, ok := s.pendingQuestions[rtID]
+        		if !ok || pq.requestID != requestID {
+        			s.controlMu.Unlock()
+        			return
+        		}
+        		delete(s.pendingQuestions, rtID)
+        		s.controlMu.Unlock()
+        		_ = s.RuntimePrompt(rtID, fmt.Sprintf("No parent response received within %s. Continue with your best judgment and state assumptions.", s.childQuestionTimeout), requestID)
+        	})
+        	s.pendingQuestions[rtID] = pendingChildQuestion{requestID: requestID, timer: timer}
+        	s.controlMu.Unlock()
+      discussion:
+        - author: "sdougbrown"
+          body: >-
+            `👾 AI Agent` Leaving as-is. This is a false positive: `requestID`
+            is function-local and not reassigned after creation. The timer closure
+            captures that immutable value for this invocation, so there is no
+            cross-request race from variable reuse.
+    assert:
+      - type: javascript
+        value: "output.includes('\"classification\": \"still_valid\"') || output.includes('\"classification\":\"still_valid\"')"
+      - type: javascript
+        value: "output.includes('\"disposition\": \"accepted\"') || output.includes('\"disposition\":\"accepted\"')"
+
+  # ── Case 6: still_valid / needs_action ────────────────────────────────────
+  # avenor/28 — credentials in URL example in docs, no reply from author.
+  # No discussion means no acceptance; finding is live → needs_action.
+  - description: "avenor/28: credentials in URL doc example — no discussion, needs action"
+    vars:
+      finding_id: "3300533985"
+      finding_path: "docs/backends.md"
+      finding_line: "93"
+      finding_created: "2026-05-26T00:53:42Z"
+      finding_body: >-
+        Credentials embedded in URL (`http://user:pass@...`) without any
+        warning. `docs/control-protocol.md` warns about token leakage via
+        query parameters, but this example silently encourages a pattern
+        that logs credentials in shell history, server logs, and process lists.
+      current_code: |
+        ### Auth
+
+        If the OpenCode server requires basic auth:
+
+        ```sh
+        --server-url http://user:pass@127.0.0.1:4096
+        ```
+      discussion: []
+    assert:
+      - type: javascript
+        value: "output.includes('\"classification\": \"still_valid\"') || output.includes('\"classification\":\"still_valid\"')"
+      - type: javascript
+        value: "output.includes('\"disposition\": \"needs_action\"') || output.includes('\"disposition\":\"needs_action\"')"
