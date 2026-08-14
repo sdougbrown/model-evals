@@ -1,0 +1,27 @@
+Loaded 23 KEEP programs for identification
+
+== qwen ==
+  recall (correct/total) = 18/23   wrong=5  ambiguous/judge-err=0
+
+== qwen-instruct ==
+  recall (correct/total) = 15/23   wrong=8  ambiguous/judge-err=0
+
+== qwen-code ==
+  recall (correct/total) = 16/23   wrong=7  ambiguous/judge-err=0
+
+== qwen-moe ==
+  recall (correct/total) = 13/23   wrong=10  ambiguous/judge-err=0
+
+== qwen-moe-instruct ==
+  recall (correct/total) = 14/23   wrong=9  ambiguous/judge-err=0
+
+== gemma4 ==
+  recall (correct/total) = 19/23   wrong=4  ambiguous/judge-err=0
+
+=== RECALL SUMMARY ===
+  qwen                       18/23
+  qwen-instruct              15/23
+  qwen-code                  16/23
+  qwen-moe                   13/23
+  qwen-moe-instruct          14/23
+  gemma4                     19/23

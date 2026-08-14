@@ -1,0 +1,174 @@
+{
+  "qwen-moe": {
+    "results": [
+      {
+        "prog": "bucketsort",
+        "status": "fixed",
+        "passed": 7,
+        "need": 7,
+        "sample": "\n\n```python\ndef bucketsort(arr, k):\n    counts = [0] * k\n    for x in arr:\n        counts[x] += 1\n\n    sorted_arr = []\n    for i, count in enumerate(counts):\n        sorted_arr.extend([i] * count)\n\n    return sorted_arr\n```"
+      },
+      {
+        "prog": "find_in_sorted",
+        "status": "fixed",
+        "passed": 7,
+        "need": 7,
+        "sample": "\n\n```python\ndef find_in_sorted(arr, x):\n    def binsearch(start, end):\n        if start == end:\n            return -1\n        mid = start + (end - start) // 2\n        if x < arr[mid]:\n            return binsearch(start, mid)\n        elif x > arr[mid]:\n            return binsearch(mid + 1, end)\n     "
+      },
+      {
+        "prog": "gcd",
+        "status": "fixed",
+        "passed": 6,
+        "need": 6,
+        "sample": "\n\n```python\ndef gcd(a, b):\n    if b == 0:\n        return a\n    else:\n        return gcd(b, a % b)\n```"
+      },
+      {
+        "prog": "get_factors",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 11,
+        "sample": ""
+      },
+      {
+        "prog": "is_valid_parenthesization",
+        "status": "fixed",
+        "passed": 3,
+        "need": 3,
+        "sample": "\n\n```python\ndef is_valid_parenthesization(parens):\n    depth = 0\n    for paren in parens:\n        if paren == '(':\n            depth += 1\n        else:\n            depth -= 1\n            if depth < 0:\n                return False\n\n    return depth == 0\n```"
+      },
+      {
+        "prog": "kth",
+        "status": "notfixed",
+        "passed": 3,
+        "need": 7,
+        "sample": ""
+      },
+      {
+        "prog": "lcs_length",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 9,
+        "sample": ""
+      },
+      {
+        "prog": "lis",
+        "status": "notfixed",
+        "passed": 8,
+        "need": 12,
+        "sample": ""
+      },
+      {
+        "prog": "longest_common_subsequence",
+        "status": "notfixed",
+        "passed": 6,
+        "need": 10,
+        "sample": ""
+      },
+      {
+        "prog": "max_sublist_sum",
+        "status": "notfixed",
+        "passed": 2,
+        "need": 6,
+        "sample": ""
+      },
+      {
+        "prog": "mergesort",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 14,
+        "sample": ""
+      },
+      {
+        "prog": "next_palindrome",
+        "status": "notfixed",
+        "passed": 4,
+        "need": 5,
+        "sample": ""
+      },
+      {
+        "prog": "next_permutation",
+        "status": "noexecute",
+        "passed": null,
+        "need": 8,
+        "sample": ""
+      },
+      {
+        "prog": "pascal",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 5,
+        "sample": ""
+      },
+      {
+        "prog": "possible_change",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 10,
+        "sample": ""
+      },
+      {
+        "prog": "powerset",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 5,
+        "sample": ""
+      },
+      {
+        "prog": "quicksort",
+        "status": "notfixed",
+        "passed": 12,
+        "need": 13,
+        "sample": ""
+      },
+      {
+        "prog": "rpn_eval",
+        "status": "notfixed",
+        "passed": 3,
+        "need": 6,
+        "sample": ""
+      },
+      {
+        "prog": "shunting_yard",
+        "status": "fixed",
+        "passed": 6,
+        "need": 6,
+        "sample": "\n\n```python\ndef shunting_yard(tokens):\n    precedence = {\n        '+': 1,\n        '-': 1,\n        '*': 2,\n        '/': 2\n    }\n\n    rpntokens = []\n    opstack = []\n    for token in tokens:\n        if isinstance(token, int):\n            rpntokens.append(token)\n        else:\n            while opstack "
+      },
+      {
+        "prog": "sieve",
+        "status": "fixed",
+        "passed": 6,
+        "need": 6,
+        "sample": "\n\n```python\ndef sieve(max):\n    primes = []\n    for n in range(2, max + 1):\n        if all(n % p != 0 for p in primes):\n            primes.append(n)\n    return primes\n```"
+      },
+      {
+        "prog": "subsequences",
+        "status": "notfixed",
+        "passed": 2,
+        "need": 12,
+        "sample": ""
+      },
+      {
+        "prog": "to_base",
+        "status": "notfixed",
+        "passed": 3,
+        "need": 10,
+        "sample": ""
+      },
+      {
+        "prog": "wrap",
+        "status": "notfixed",
+        "passed": 0,
+        "need": 5,
+        "sample": ""
+      }
+    ],
+    "summary": {
+      "model": "qwen-moe",
+      "fixed": 6,
+      "part": 0,
+      "n": 23
+    },
+    "seconds": 5975
+  }
+}

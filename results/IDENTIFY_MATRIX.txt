@@ -1,0 +1,26 @@
+## Bug-IDENTIFICATION recall (QuixBugs, judge=deepseek-flash)
+
+program                 qwen       qwen-instructqwen-code  qwen-moe   qwen-moe-instructgemma4     
+bucketsort              Y          Y          Y          Y          Y          Y          
+find_in_sorted          Y          Y          Y          .          Y          Y          
+gcd                     Y          Y          Y          Y          Y          Y          
+get_factors             Y          .          Y          .          .          Y          
+is_valid_parenthesizationY          Y          Y          Y          Y          Y          
+kth                     Y          Y          Y          Y          Y          Y          
+lcs_length              Y          Y          .          .          Y          Y          
+lis                     .          .          .          .          .          .          
+longest_common_subsequenceY          Y          Y          Y          .          Y          
+max_sublist_sum         Y          .          Y          Y          .          Y          
+mergesort               Y          Y          Y          .          .          .          
+next_palindrome         .          .          .          Y          Y          Y          
+next_permutation        Y          Y          Y          Y          Y          Y          
+pascal                  Y          Y          Y          Y          Y          Y          
+possible_change         Y          .          .          .          .          .          
+powerset                Y          Y          Y          .          Y          Y          
+quicksort               Y          Y          .          .          .          Y          
+rpn_eval                Y          .          .          Y          Y          Y          
+shunting_yard           Y          Y          Y          Y          Y          Y          
+sieve                   .          Y          Y          .          .          Y          
+subsequences            Y          .          Y          .          Y          .          
+to_base                 .          Y          .          Y          Y          Y          
+wrap                    .          .          Y          Y          .          Y          

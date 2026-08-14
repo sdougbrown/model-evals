@@ -49,6 +49,27 @@ Even so, thinking is not a free win: find_in_sorted stayed notfixed, and no-thin
 qwen-moe-mult is 14/23 while qwen-instruct no-think is 19/23. Full long-leash run is the
 remaining open question (~1-1.5h for all 23 at 24K tokens).
 
+## Bug-IDENTIFICATION recall (QuixBugs, judge=deepseek-flash)
+
+Decouples spotting the bug from producing a runnable fix. Each model identifies the defect
+in prose; deepseek-flash (local gateway) judges whether the finding matches the single-line
+fix. Full matrix: results/IDENTIFY_MATRIX.txt
+
+| model | recall | vs its own correction |
+|---|---|---|
+| gemma4 | 19/23 = 83% | (not run on correction) |
+| qwen (think) | 18/23 = 78% | corr 15/23 |
+| qwen-code (think) | 16/23 = 70% | (not run on correction) |
+| qwen-instruct (no-think) | 15/23 = 65% | corr 19/23 |
+| qwen-moe-instruct (no-think) | 14/23 = 61% | corr 14/23 |
+| qwen-moe (think) | 13/23 = 57% | corr 6/23 (24K) |
+| nemotron / nemotron-instruct | (not served — awaiting swap) | corr 15/15/23 |
+
+Key finding: the correction harness systematically under-credits thinking models. qwen-moe
+identifies 13/23 but appears to fix only 6/23; qwen identifies 18/23 (fixes 15). A reviewer
+is judged on IDENTIFICATION recall, so use this number, not the correction number.
+Run: python3 scripts/quixbugs_identify.py --models <...> --judge deepseek-flash
+
 ## Takeaways for reviewer/mule trialing
 
 - **Mule = use qwen-instruct (no-think).** Fastest AND best bug-fixing (83%) — beats
