@@ -1,0 +1,170 @@
+{
+  "gemma4": {
+    "results": [
+      {
+        "prog": "bucketsort",
+        "finding": "1. The exact line that is wrong is: `for i, count in enumerate(arr):`\n\n2. It is wrong because it iterates over the elements of the input list `arr` (which contains the values to be sorted) instead of iterating over the index and count values of the `counts` list. Because `enumerate(arr)` yields the values from the input array, `count` becomes the value of the element itself rather than the frequency of that value. In the case of an empty list `arr`, `enumerate(arr)` yields nothing, which prevents the exception mentioned, but for any non-empty list, it uses the wrong data to build the sorted ar",
+        "judge": "{\"correct\": true, \"reason\": \"The finding precisely identifies the bug: iterating over `arr` instead of `counts` in the reconstruction loop, and recommends the correct fix (`enumerate(counts)`), matching the corrected source's change.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "find_in_sorted",
+        "finding": "1. The exact expression that is wrong is: `return binsearch(mid, end)`\n\n2. It is wrong because it leads to infinite recursion (a `RecursionError`). When the search range is reduced to two adjacent elements (e.g., `start = 0`, `end = 1`), the calculation `mid = start + (end - start) // 2` results in `mid` being equal to `start`. If `x > arr[mid]` is true, the function calls `binsearch(mid, end)`, which is identical to the current call, creating an infinite loop.\n\n3. The correct expression should be: `return binsearch(mid + 1, end)`\n",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the exact buggy expression `binsearch(mid, end)` and explains that it should be `binsearch(mid + 1, end)` to avoid infinite recursion, matching the single intended fix in the correct source.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "gcd",
+        "finding": "1. The exact expression that is wrong is: `return gcd(a % b, b)`\n\n2. It is wrong because it is performing the Euclidean algorithm incorrectly. In the standard Euclidean algorithm, the new arguments should be the divisor (`b`) and the remainder (`a % b`). By passing `a % b` as the first argument and `b` as the second, the function will eventually attempt to calculate `(a % b) % b`. If `a < b` (as in the case of 3 and 12), the first recursive call becomes `gcd(3 % 12, 12)`, which is `gcd(3, 12)`. This leads to infinite recursion (a `RecursionError`) because the arguments never change or reach th",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the exact bug: the recursive call uses gcd(a % b, b) instead of gcd(b, a % b), and correctly explains the Euclidean algorithm error and its consequence.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "get_factors",
+        "finding": "1. The exact expression that is wrong is `return []` (the final line of the function).\n\n2. It is wrong because when the loop completes without finding a divisor, it means the current value of `n` is a prime number. Returning an empty list discards that prime number, causing the function to fail to include the last factor in the recursion (e.g., `get_factors(101)` returns `[]` instead of `[101]`). While the function handles `n == 1` correctly at the start, the base case for a prime number must return the number itself.\n\n3. The correct expression should be `return [n]`.\n",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies that the final `return []` should be `return [n]` when n is prime, which matches the exact bug fixed in the correct source.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "is_valid_parenthesization",
+        "finding": "1. The exact expression that is wrong is: `return True`\n\n2. It is wrong because it only checks if the running depth ever drops below zero (ensuring no closing parenthesis appears without a matching opening one). However, it fails to verify that every opening parenthesis has been closed by the end of the string. For a parenthesization to be valid, the final depth must be exactly zero. In the case of `'(('`, the function returns `True` because the depth remains non-negative, even though the parentheses are unclosed.\n\n3. The correct expression should be: `return depth == 0`\n",
+        "judge": "{\"correct\": true, \"reason\": \"The finding correctly identifies that the bug is the missing final depth check, and pinpoints the exact wrong expression `return True` and the correct fix `return depth == 0`.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "kth",
+        "finding": "1. The exact expression that is wrong is `return kth(above, k)`.\n\n2. It is wrong because it passes the original index `k` to the recursive call on the `above` list. However, the elements in `above` are located at indices starting after the `below` and `pivot` elements. By passing `k` instead of an offset, the function looks for the $k$-th element in a smaller subset that may not even have $k$ elements, leading to an `IndexError` or an incorrect result.\n\n3. The correct expression should be `return kth(above, k - num_lessoreq)`.\n",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer correctly identifies that the bug is the recursive call passing `k` instead of `k - num_lessoreq` when recursing on the `above` partition, matching the intended fix.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "lcs_length",
+        "finding": "1. The exact expression that is wrong is: `max(dp.values()) if dp else 0`\n\n2. It is wrong because the `max()` function is called on the values of the `dp` Counter, but the function logic for calculating the LCS length is mathematically incorrect. Specifically, the line `dp[i, j] = dp[i - 1, j] + 1` attempts to build a running length using `i - 1` (the previous character in string `s`) instead of `i - 1, j - 1` (the previous character in both strings). Because it only checks the previous index of `s` and ignores the continuity requirement of `t`, it calculates a variation of common character co",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the exact bug in the recurrence relation, noting that `dp[i, j] = dp[i - 1, j] + 1` should be `dp[i - 1, j - 1] + 1`, which matches the fix in the correct source. The extra remarks about edge cases and the `max` expression do not negate the correct",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "lis",
+        "finding": "1. The exact expression that is wrong is: `max(prefix_lengths)`.\n\n2. It is wrong because it calculates the maximum **index value** (the length) within the list of valid lengths, rather than the maximum **length itself**. Since `prefix_lengths` is a list of lengths $j$, and $j$ represents the length of a subsequence ending at `ends[j]`, `max(prefix_lengths)` correctly identifies the length of the longest possible prefix. However, if `prefix_lengths` is empty, the code attempts to call `max()` on an empty sequence, which raises a `ValueError`. Furthermore, for an empty input `arr`, the `for` loo",
+        "judge": "{\"correct\": false, \"reason\": \"The reviewer's finding focuses on max(prefix_lengths) raising an error for empty lists, but the actual bug fixed in the correct source is that `longest = length + 1` should be `longest = max(longest, length + 1)`. The reviewer does not identify this root-cause line chan",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "longest_common_subsequence",
+        "finding": "1. The exact line that is wrong is: `return a[0] + longest_common_subsequence(a[1:], b)`\n\n2. It is wrong because it fails to consume the first character of the second string (`b`) when a match is found. In the case where `a[0] == b[0]`, the logic correctly includes the matching character, but it only increments the index for string `a`. If the same character appears again at the start of `b`, the recursion will incorrectly attempt to match `a[1:]` against the same `b[0]` again, or more critically, it fails to \"skip\" the matched character in `b`. In the provided failing case, this leads to an i",
+        "judge": "{\"correct\": true, \"reason\": \"The finding pinpoints the exact wrong line and the correct fix, accurately describing the issue of not consuming b[0] when a match is found, which matches the intended defect.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "max_sublist_sum",
+        "finding": "1. The exact expression that is wrong is: `max_ending_here = max_ending_here + x`\n\n2. It is wrong because it fails to reset the running sum when it becomes negative. In Kadane's algorithm, if the current sum falls below zero, it should be reset to zero because any subsequent sublist would be better off starting fresh rather than adding to a negative prefix. Because the code lacks a `max(0, ...)` check or a reset mechanism, `max_ending_here` can carry a negative \"debt\" into future elements, preventing the algorithm from correctly identifying the start of a new maximal sublist. (Note: While the ",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the exact buggy line and correctly explains that without resetting to zero via max(0, ...), the running sum carries negative debt. This matches the fix in the correct source.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "mergesort",
+        "finding": "1. The exact expression that is wrong is: `result.extend(left[i:] or right[j:])`\n\n2. It is wrong because the `or` operator in Python evaluates the truthiness of the first operand. If `left[i:]` is an empty list (which evaluates to `False`), the expression will return `right[j:]`. However, if `left[i:]` is **not** empty, the expression evaluates to `left[i:]` and completely ignores `right[j:]`, even if `right[j:]` contains elements. This causes the function to fail whenever both sub-lists still have remaining elements, or specifically in cases where the logic depends on concatenating both remai",
+        "judge": "{\"correct\": false, \"reason\": \"The reviewer identifies the `result.extend(left[i:] or right[j:])` expression as the bug, but the correct fix in the provided sources changes the base case from `len(arr) == 0` to `len(arr) <= 1` (or equivalent), not the merge extension. The actual root-cause bug is tha",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "next_palindrome",
+        "finding": "1. The exact expression that is wrong is: `return [1] + (len(digit_list)) * [0] + [1]`\n\n2. It is wrong because of an \"off-by-one\" error in the list construction. When all digits in the palindrome are 9 (e.g., `[9, 9, 9]`), the next palindrome is `[1, 0, 0, 1]`. The current expression produces a list with `len(digit_list) + 2` elements (e.g., `[1, 0, 0, 0, 1]` for a 3-digit input), whereas the correct length should be `len(digit_list) + 1`. Furthermore, the expression as written will cause a `TypeError` in the specific failing case provided (`[1, 3, 1]`) because it attempts to multiply an integ",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer identifies the off-by-one in the fallback return line, which is the exact defect fixed. Though the finding includes rambling and some incorrect side commentary, it correctly pinpoints the wrong expression and root cause (extra zero length) for the all-nines ",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "next_permutation",
+        "finding": "1. The exact expression that is wrong is: `if perm[j] < perm[i]:`\n\n2. It is wrong because to find the lexicographically next permutation, you must swap the element at index `i` with the **smallest** element to its right that is still **greater** than `perm[i]`. The current code checks if `perm[j]` is *less than* `perm[i]`, which is the opposite of the required logic and causes the loop to fail to find a valid swap, eventually leading to the function returning `None` (or causing an error if the caller expects a list).\n\n3. The correct expression should be: `if perm[j] > perm[i]:`\n",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the exact buggy expression `perm[j] < perm[i]` and correctly states it should be `perm[j] > perm[i]`, matching the intended fix.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "pascal",
+        "finding": "1. The exact expression that is wrong is: `for c in range(0, r):`\n\n2. It is wrong because the loop range `range(0, r)` only iterates `r` times (from index `0` to `r-1`). Since a row in Pascal's triangle at index `r` must contain `r + 1` elements, this loop fails to generate the final element of every row (the trailing `1`). This results in incomplete rows and, for the specific case of `n=1`, the loop logic doesn't break, but the logic for `n > 1` fails to build the triangle correctly. Furthermore, the provided failing case `f(1)` actually returns `[[1]]` correctly in the provided code, but the",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer pinpoints the exact faulty line `for c in range(0, r):` and correctly identifies the fix to `range(0, r + 1)`, matching the intended bug fix in the correct source.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "possible_change",
+        "finding": "1. The exact expression that is wrong is: `first, *rest = coins`\n\n2. It is wrong because it does not account for the case where `coins` is an empty list. When `total` is negative, the function correctly returns `0`. However, if `total` is positive but `coins` is empty (which happens as the recursion exhausts the list), the unpacking assignment attempts to unpack an empty list into `first` and `rest`, raising a `ValueError: not enough values to unpack`.\n\n3. The correct expression should be a check to ensure the list is not empty before unpacking, such as: `if not coins: return 0` followed by th",
+        "judge": "{\"correct\": true, \"reason\": \"The finding correctly identifies that the missing empty-coins check is the root-cause bug, matching the fix in the correct source.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "powerset",
+        "finding": "1. The exact expression that is wrong is: `return [[first] + subset for subset in rest_subsets]`\n\n2. It is wrong because it only returns the subsets that **include** the `first` element, completely omitting the subsets that **exclude** the `first` element (the `rest_subsets` themselves). This results in a power set that only contains subsets involving every element from the tail upward, failing to accumulate the full combinatorial range.\n\n3. The correct expression should be: `return rest_subsets + [[first] + subset for subset in rest_subsets]`\n",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the exact bug: the function omits rest_subsets (subsets excluding the first element) by returning only the subsets with first prepended. The suggested fix (concatenate rest_subsets with the prepended subsets) matches the corrected source.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "quicksort",
+        "finding": "1. The exact expression that is wrong is: `greater = quicksort([x for x in arr[1:] if x > pivot])`\n\n2. It is wrong because the logic ignores elements that are equal to the pivot (other than the single pivot element extracted at the start). While the `lesser` list handles elements strictly less than the pivot, the `greater` list only handles elements strictly greater than the pivot. If the input contains duplicate values, those duplicates are filtered out of both sub-lists and omitted from the final result. In the specific case of `f([5, 4, 3, 2, 1])`, the error is not actually a duplicate issu",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the same defect: the greater list excludes elements equal to the pivot, causing duplicates to be lost. Although it mentions the unique-element example, it clearly pinpoints the duplicate-omission root cause and the correct fix, matching the changed",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "rpn_eval",
+        "finding": "1. The exact expression that is wrong is: `a = stack.pop()` followed by `b = stack.pop()`.\n\n2. It is wrong because of the order of operands. In Reverse Polish Notation, the first value popped from the stack is the right-hand operand (the second operand), and the second value popped is the left-hand operand (the first operand). The current code assigns the first value popped to `a` and the second to `b`, which causes incorrect results for non-commutative operations like subtraction and division (e.g., `[10.0, 2.0, '/']` would attempt `2.0 / 10.0` instead of `10.0 / 2.0`). Furthermore, in the sp",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the operand-order bug: assigning the first popped value to `a` and second to `b` reverses operands for non-commutative operations, and the fix swaps the pop assignments. This matches the changed expression in the correct source.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "shunting_yard",
+        "finding": "1. The exact line that is wrong is: `while opstack and precedence[token] <= precedence[opstack[-1]]:`\n\n2. It is wrong because it attempts to access the `precedence` dictionary using `token` as a key before checking if the token is actually an operator. If the input `tokens` list is empty, the `for` loop never executes and the function returns correctly; however, if a token is passed that is not in the `precedence` dictionary (such as an integer), the logic fails. More specifically, in the context of the provided logic, the code assumes that if a token is not an `int`, it must be a key in `prec",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer identifies the missing `opstack.append(token)` as the root-cause defect, which matches the exact fix in the correct source.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "sieve",
+        "finding": "1. The exact expression that is wrong is: `any(n % p > 0 for p in primes)`\n\n2. It is wrong for two reasons. First, it logicially implements the opposite of primality: it checks if `n` is NOT divisible by any existing prime (which would make it prime), but the `any` condition returns `True` if even one prime does not divide `n`. For example, when `n=4` and `primes=[2, 3]`, `4 % 3 > 0` is `True`, causing the function to incorrectly identify 4 as prime. Second, the function fails for `max < 2` because the `range(2, max + 1)` produces an empty range, but the core logic error is that the condition ",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the exact wrong expression 'any(n % p > 0 for p in primes)' and its logical flaw, matching the intended fix to 'all(...)'. It also correctly suggests the corrected form.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "subsequences",
+        "finding": "1. The exact expression that is wrong: `[i] + rest`\n\n2. Why it is wrong: The expression attempts to use the `+` operator to concatenate a list `[i]` with a variable `rest`. However, `rest` is being yielded by the recursive call `subsequences(...)`, which returns a list of lists (e.g., `[[2, 3], [2, 4]]`). When the code iterates `for rest in subsequences(...)`, `rest` represents an individual sub-list (e.g., `[2, 3]`). In Python, adding a list to a list `[i] + [2, 3]` results in a single flattened list `[i, 2, 3]`. Because the `extend` method is then called on this flattened list, the function ",
+        "judge": "{\"correct\": false, \"reason\": \"The reviewer incorrectly identifies the bug. The actual defect is the base case returning `[]` instead of `[[]]`, which causes the recursion to fail. The expression `[i] + rest` is correct, and `ret.extend([i] + rest for rest in subsequences(...))` correctly extends wit",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "to_base",
+        "finding": "1. The exact line that is wrong is: `result = result + alphabet[i]`\n\n2. The line is wrong because it appends the new digit to the end of the string, which results in the digits being in the reverse order of their correct positional significance (the least significant digit is placed first). While this produces the correct string for some inputs where the result is palindromic, it fails for most cases. In the specific case of `to_base(16, 19)`, the loop produces `'G'`, but for a case like `to_base(17, 16)`, it would return `'11'` instead of `'11'` by coincidence, or for `to_base(18, 16)`, it wo",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the exact buggy line `result = result + alphabet[i]` and correctly states that it appends digits in the wrong order, reversing the result. It also prescribes the correct fix `result = alphabet[i] + result`, matching the changed line in the correcte",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "wrap",
+        "finding": "1. The exact expression that is wrong is: `text = text[end:]`\n\n2. It is wrong because it fails to account for the character at the `end` index. When a space is found via `rfind`, the `end` index points to that space. By slicing `text[end:]`, the space is included as the first character of the remaining text. This causes the loop to potentially find that same space again (or a space immediately following it) in the next iteration, leading to an infinite loop or incorrect string slicing. In the provided failing case, the logic causes the `text` string to never decrease in a way that satisfies th",
+        "judge": "{\"correct\": true, \"reason\": \"The finding correctly identifies the root-cause bug in the line `text = text[end:]` causing an infinite loop because the space at `end` is not consumed. The correct fix advances past that space with `text[end+1:]`, matching the intended change in the corrected source.\"}",
+        "correct": true,
+        "kb": "correct"
+      }
+    ],
+    "recall": 20,
+    "n": 23,
+    "seconds": 211
+  }
+}

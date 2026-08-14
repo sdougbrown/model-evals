@@ -65,11 +65,18 @@ fix. Full matrix: results/IDENTIFY_MATRIX.txt
 | qwen-moe (think) | 13/23 = 57% | corr 6/23 (24K) |
 | nemotron (think) | 10/23 = 43% | corr 15/23 |
 | nemotron-instruct (no-think) | 10/23 = 43% | corr 15/23 |
+| gemma4 reason=high | 20/23 = 87% | best identifier recorded |
+| gemma4 reason=low | 19/23 = 83% | = no-think |
+| gemma4 reason=medium | 16/23 = 70% | hurts recall |
 
 Key finding: the correction harness systematically under-credits thinking models. qwen-moe
 identifies 13/23 but appears to fix only 6/23; qwen identifies 18/23 (fixes 15). A reviewer
 is judged on IDENTIFICATION recall, so use this number, not the correction number.
 Run: python3 scripts/quixbugs_identify.py --models <...> --judge deepseek-flash
+
+Gemma4 reasoning sweep (gateway `reasoning` param): high=20/23 best anywhere; low=no-think
+(19/23); medium=16/23 (actively worse). Supplemental probe — if gemma tooling is made
+stable, reasoning=high gives it the top reviewer recall.
 
 ## Takeaways for reviewer/mule trialing
 

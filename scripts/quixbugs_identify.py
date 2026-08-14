@@ -26,9 +26,11 @@ import argparse, json, os, re, subprocess, sys, time, urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from quixbugs_runner import load_programs, build_prompt, extract_python  # noqa
 
-def chat(model, messages, gateway, max_tokens=2048, timeout=900):
-    body = json.dumps({"model": model, "messages": messages, "max_tokens": max_tokens}).encode()
-    req = urllib.request.Request(gateway + "/chat/completions", data=body,
+def chat(model, messages, gateway, max_tokens=2048, timeout=900, reasoning=None):
+    body = {"model": model, "messages": messages, "max_tokens": max_tokens}
+    if reasoning:
+        body["reasoning"] = reasoning
+    req = urllib.request.Request(gateway + "/chat/completions", data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.load(r)
@@ -89,7 +91,7 @@ def judge_prompt(prog):
 
 Please output your JSON verdict exactly."""
 
-def grade_identification(model, programs, gateway, judge, max_samples=None):
+def grade_identification(model, programs, gateway, judge, max_samples=None, reasoning=None):
     results = []
     for i, prog in enumerate(programs):
         if max_samples and i >= max_samples:
@@ -98,7 +100,7 @@ def grade_identification(model, programs, gateway, judge, max_samples=None):
         if prog["failing"] is None:
             continue
         try:
-            resp = chat(model, [{"role": "user", "content": identify_prompt(prog)}], gateway, max_tokens=1500)
+            resp = chat(model, [{"role": "user", "content": identify_prompt(prog)}], gateway, max_tokens=1500, reasoning=reasoning)
             finding = _compose_output(resp["choices"][0]["message"])
         except Exception as e:
             results.append({"prog": name, "model_status": "gateway_error", "detail": str(e)})
@@ -129,6 +131,7 @@ def main():
     ap.add_argument("--models", nargs="+", required=True)
     ap.add_argument("--judge", default="deepseek-flash")
     ap.add_argument("--gateway", default="http://localhost:4000/v1")
+    ap.add_argument("--reasoning", choices=["low","medium","high"], default=None)
     ap.add_argument("--max-samples", type=int, default=None)
     ap.add_argument("--save", default="results/quixbugs-identify.json")
     args = ap.parse_args()
@@ -138,7 +141,7 @@ def main():
     allout = {}
     for model in args.models:
         st = time.time()
-        res = grade_identification(model, programs, args.gateway, args.judge, args.max_samples)
+        res = grade_identification(model, programs, args.gateway, args.judge, args.max_samples, reasoning=args.reasoning)
         rc = sum(1 for r in res if r.get("correct") is True)
         n = len(res)
         wrong = sum(1 for r in res if r.get("correct") is False)
