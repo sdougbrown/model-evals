@@ -1,0 +1,70 @@
+# Classifier eval — gemma4 complete column + qwen-code.
+# no-think baseline vs reasoning=high, plus qwen-code (code-tuned think) to round
+# out coverage that crux got (qwen-code 48/50) but classifier didn't yet.
+description: "Classifier: gemma4 (no-think vs reasoning=high) + qwen-code"
+
+evaluateOptions:
+  maxConcurrency: 3
+
+providers:
+  - id: openai:chat:gemma4
+    label: gemma4 (no-think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: gemma4
+      max_tokens: 1024
+
+  - id: openai:chat:gemma4
+    label: gemma4 (reasoning=high)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: gemma4
+      reasoning: high
+      max_tokens: 4096
+
+  - id: openai:chat:qwen-code
+    label: qwen-code (think, code-tuned)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: qwen-code
+      max_tokens: 8192
+
+  - id: openai:chat:qwen-moe
+    label: qwen-moe (think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: qwen-moe
+      max_tokens: 8192
+
+  - id: openai:chat:qwen-moe-instruct
+    label: qwen-moe-instruct (no-think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: qwen-moe-instruct
+      max_tokens: 1024
+
+  - id: openai:chat:nemotron
+    label: nemotron (think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: nemotron
+      max_tokens: 8192
+
+  - id: openai:chat:nemotron-instruct
+    label: nemotron-instruct (no-think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: nemotron-instruct
+      max_tokens: 1024
+
+prompts:
+  - file://prompt.js
+
+tests: file://tests.yaml
