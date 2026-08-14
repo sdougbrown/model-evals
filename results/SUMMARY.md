@@ -63,7 +63,8 @@ fix. Full matrix: results/IDENTIFY_MATRIX.txt
 | qwen-instruct (no-think) | 15/23 = 65% | corr 19/23 |
 | qwen-moe-instruct (no-think) | 14/23 = 61% | corr 14/23 |
 | qwen-moe (think) | 13/23 = 57% | corr 6/23 (24K) |
-| nemotron / nemotron-instruct | (not served — awaiting swap) | corr 15/15/23 |
+| nemotron (think) | 10/23 = 43% | corr 15/23 |
+| nemotron-instruct (no-think) | 10/23 = 43% | corr 15/23 |
 
 Key finding: the correction harness systematically under-credits thinking models. qwen-moe
 identifies 13/23 but appears to fix only 6/23; qwen identifies 18/23 (fixes 15). A reviewer
