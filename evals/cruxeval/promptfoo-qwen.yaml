@@ -1,0 +1,47 @@
+# CRUXEval-O — qwen (dense 27B) on the local gateway
+# qwen / qwen-code / qwen-instruct are the same 27B dense model with different
+# thinking + serving settings. qwen & qwen-code think (need large max_tokens to
+# spill past reasoning into content); qwen-instruct answers directly.
+description: "CRUXEval-O: qwen (dense 27B) — think vs no-think vs code-tuned (pass@1, 50 tests)"
+
+evaluateOptions:
+  maxConcurrency: 3
+
+providers:
+  - id: openai:chat:qwen
+    label: qwen (think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: qwen
+      max_tokens: 8192
+
+  - id: openai:chat:qwen-instruct
+    label: qwen-instruct (no-think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: qwen-instruct
+      max_tokens: 256
+
+  - id: openai:chat:qwen-code
+    label: qwen-code (think, code-tuned)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: qwen-code
+      max_tokens: 8192
+
+prompts:
+  - |
+    You are given a Python function. Determine what it returns when called with the provided input.
+
+    ```python
+    {{code}}
+    ```
+
+    What does `{{input}}` return?
+
+    Respond with ONLY the Python literal return value — for example: `42`, `'hello'`, `[1, 2, 3]`, `None`, `True`. No explanation, no code block, just the value.
+
+tests: file://tests.yaml

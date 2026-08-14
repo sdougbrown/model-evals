@@ -33,6 +33,28 @@ promptfoo eval
 promptfoo view
 ```
 
+## evals
+
+- `cruxeval/` — code-output reasoning: `promptfoo-nemotron-full.yaml` (nemotron, 50 tests), `promptfoo-qwen.yaml` (qwen dense 27B, think/no-think/code)
+- `classifier/` — finding re-classification: `promptfoo-qwen.yaml`, `promptfoo-nemotron.yaml`
+- `bugfinding/` — QuixBugs bug-spotting (self-contained)
+
+## Bug-finding eval (QuixBugs)
+
+Deterministic, self-contained bug-spotting eval. For each of 23 QuixBugs programs with
+an known single-line bug, show the model the buggy source plus one concrete failing
+case, ask it to output the corrected function, then **execute the model's own fix**
+against the program's full test suite.
+
+```bash
+python3 scripts/quixbugs_runner.py --models nemotron qwen qwen-instruct nemotron-instruct
+# data vendored in evals/bugfinding/quixbugs/ (QuixBugs BSD-3-Clause, LICENSE included)
+```
+
+Grading: `fixed` = model's function passes every test the correct version passes;
+`part` = passes more than the buggy version; `notfixed` = no better than buggy.
+No LLM judge, no cloud API — only the local gateway.
+
 ## Adding PR review test cases
 
 Collect real diffs from repos where you know what the correct review looks like:

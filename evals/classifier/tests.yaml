@@ -1,0 +1,159 @@
+- description: 'avenor/28: --timeout ''in seconds'' description — fixed in doc update'
+  vars:
+    finding_id: '3300055955'
+    finding_path: docs/cli.md
+    finding_created: '2026-05-25T21:42:45Z'
+    finding_body: 'The `--timeout` description says "Overall session timeout in seconds",
+      but this flag accepts a Go duration (same as `avenor run` line 44: `30s`, `5m`,
+      etc.). Passing a bare integer like `60` will not work as expected.'
+    current_code: '| `--timeout` | `0` (disabled) | Overall session timeout (Go duration:
+      `30s`, `5m`, etc.); fires after duration regardless of progress |
+
+      | `--progress-timeout` | `0` (disabled) | Session progress timeout; fires if
+      no event received for this duration |
+
+      '
+    discussion:
+    - author: sdougbrown
+      body: '`👾 AI Agent` Fixed — changed to "Overall session timeout (Go duration:
+        `30s`, `5m`, etc.)" in 64935e1.'
+  assert:
+  - type: javascript
+    value: 'output.includes(''"classification": "fixed"'') || output.includes(''"classification":"fixed"'')'
+  - type: javascript
+    value: 'output.includes(''"disposition": "no_action"'') || output.includes(''"disposition":"no_action"'')'
+- description: 'avenor/34: WaitForDone subscription leak — fixed with scoped context'
+  vars:
+    finding_id: '3322114846'
+    finding_path: internal/runtime/pony/config.go
+    finding_line: '130'
+    finding_created: '2026-06-01T00:00:00Z'
+    finding_body: '`WaitForDone` subscribes with `SubscribeRuntime(ctx, sessionID)`
+      but never unsubscribes or closes the subscription after returning. This leaks
+      subscriber resources on the client side over time.'
+    current_code: "func (e *controlSocketExecutor) WaitForDone(ctx context.Context,\
+      \ sessionID string) (*runtime.AgentResult, error) {\n\tsubCtx, cancel := context.WithCancel(ctx)\n\
+      \tdefer cancel()\n\tsub := e.client.SubscribeRuntime(subCtx, sessionID)\n\t\
+      for evt := range sub {\n\t\tif evt.Event == \"session.end\" {\n\t\t\tstopReason,\
+      \ _ := evt.Raw[\"stop_reason\"].(string)\n\t\t\texitCode := 0\n\t\t\tif ec,\
+      \ ok := evt.Raw[\"exit_code\"].(float64); ok {\n\t\t\t\texitCode = int(ec)\n\
+      \t\t\t}\n"
+    discussion:
+    - author: sdougbrown
+      body: '`👾 AI Agent` Fixed in 7e63102. `WaitForDone` now creates a scoped subscription
+        context (`subCtx`) and calls `cancel()` on return, which unregisters/closes
+        the runtime subscription promptly and avoids subscriber buildup.'
+  assert:
+  - type: javascript
+    value: 'output.includes(''"classification": "fixed"'') || output.includes(''"classification":"fixed"'')'
+  - type: javascript
+    value: 'output.includes(''"disposition": "no_action"'') || output.includes(''"disposition":"no_action"'')'
+- description: 'avenor/34: spawnAgents ''concurrently'' vs sequential loop — design
+    rationale'
+  vars:
+    finding_id: '3322011710'
+    finding_path: internal/runtime/pony/agent_tools.go
+    finding_line: '111'
+    finding_created: '2026-06-01T00:00:00Z'
+    finding_body: spawnAgentsTool runs agents sequentially in a for loop despite the
+      description saying 'All agents run concurrently.'
+    current_code: "func (t *spawnAgentsTool) Description() string {\n\treturn \"Create\
+      \ multiple child agent sessions in a single call. All agents run concurrently.\
+      \ Returns session IDs with labels for each spawned agent.\"\n}\n// ... Execute\
+      \ method:\n\tfor _, agent := range input.Agents {\n\t\tsessionID, err := t.executor.SpawnAgent(ctx,\
+      \ params)\n\t\tif err != nil {\n\t\t\treturn \"\", fmt.Errorf(\"spawn_agents:\
+      \ %w\", err)\n\t\t}\n\t\tparts = append(parts, desc)\n\t}\n\treturn \"Spawned\
+      \ agents: [\" + strings.Join(parts, \", \") + \"]\", nil\n"
+    discussion:
+    - author: sdougbrown
+      body: '`👾 AI Agent` Leaving as-is by design. `spawn_agents` dispatches spawn
+        RPCs sequentially, but each spawned runtime starts immediately and runs concurrently
+        in the supervisor. The wording "run concurrently" describes runtime execution,
+        not concurrent client-side RPC issuance.'
+  assert:
+  - type: javascript
+    value: 'output.includes(''"classification": "still_valid"'') || output.includes(''"classification":"still_valid"'')'
+  - type: javascript
+    value: 'output.includes(''"disposition": "accepted"'') || output.includes(''"disposition":"accepted"'')'
+- description: 'avenor/34: spawnAgents partial failure — accepted with follow-up tracking'
+  vars:
+    finding_id: '3322114811'
+    finding_path: internal/runtime/pony/agent_tools.go
+    finding_line: '157'
+    finding_created: '2026-06-01T00:00:00Z'
+    finding_body: '`spawnAgentsTool.Execute` has partial failure semantics: if agent
+      N fails to spawn, agents 0..N-1 are already spawned with no way to roll them
+      back.'
+    current_code: "\tfor _, agent := range input.Agents {\n\t\tsessionID, err := t.executor.SpawnAgent(ctx,\
+      \ params)\n\t\tif err != nil {\n\t\t\treturn \"\", fmt.Errorf(\"spawn_agents:\
+      \ %w\", err)\n\t\t}\n\t\tdesc := sessionID\n\t\tif agent.Label != \"\" {\n\t\
+      \t\tdesc = sessionID + \"=\" + agent.Label\n\t\t}\n\t\tparts = append(parts,\
+      \ desc)\n\t}\n"
+    discussion:
+    - author: sdougbrown
+      body: '`👾 AI Agent` Accepting as-is for this PR scope. Partial failure semantics
+        in `spawn_agents` are currently intentional: each spawn is an independent
+        RPC and previously spawned runtimes keep running. We can track rollback/cancellation
+        semantics as a follow-up enhancement if desired.'
+  assert:
+  - type: javascript
+    value: 'output.includes(''"classification": "still_valid"'') || output.includes(''"classification":"still_valid"'')'
+  - type: javascript
+    value: 'output.includes(''"disposition": "accepted"'') || output.includes(''"disposition":"accepted"'')'
+- description: 'avenor/34: requestID timer closure — user claims false positive, accepted'
+  vars:
+    finding_id: '3322011750'
+    finding_path: internal/stable/supervisor.go
+    finding_line: '1343'
+    finding_created: '2026-06-01T00:00:00Z'
+    finding_body: 'Race condition in RuntimeSendToParent timer closure: the `requestID`
+      variable is captured by reference in the `time.AfterFunc` closure.'
+    current_code: "\ts.controlMu.Lock()\n\ts.childQuestionSeq++\n\trequestID := fmt.Sprintf(\"\
+      cq_%d\", s.childQuestionSeq)\n\t// ... setup pendingQuestions ...\n\ttimer :=\
+      \ time.AfterFunc(s.childQuestionTimeout, func() {\n\t\ts.controlMu.Lock()\n\t\
+      \tpq, ok := s.pendingQuestions[rtID]\n\t\tif !ok || pq.requestID != requestID\
+      \ {\n\t\t\ts.controlMu.Unlock()\n\t\t\treturn\n\t\t}\n\t\tdelete(s.pendingQuestions,\
+      \ rtID)\n\t\ts.controlMu.Unlock()\n\t\t_ = s.RuntimePrompt(rtID, fmt.Sprintf(\"\
+      No parent response received within %s. Continue with your best judgment and\
+      \ state assumptions.\", s.childQuestionTimeout), requestID)\n\t})\n\ts.pendingQuestions[rtID]\
+      \ = pendingChildQuestion{requestID: requestID, timer: timer}\n\ts.controlMu.Unlock()\n"
+    discussion:
+    - author: sdougbrown
+      body: '`👾 AI Agent` Leaving as-is. This is a false positive: `requestID` is
+        function-local and not reassigned after creation. The timer closure captures
+        that immutable value for this invocation, so there is no cross-request race
+        from variable reuse.'
+  assert:
+  - type: javascript
+    value: 'output.includes(''"classification": "still_valid"'') || output.includes(''"classification":"still_valid"'')'
+  - type: javascript
+    value: 'output.includes(''"disposition": "accepted"'') || output.includes(''"disposition":"accepted"'')'
+- description: 'avenor/28: credentials in URL doc example — no discussion, needs action'
+  vars:
+    finding_id: '3300533985'
+    finding_path: docs/backends.md
+    finding_line: '93'
+    finding_created: '2026-05-26T00:53:42Z'
+    finding_body: Credentials embedded in URL (`http://user:pass@...`) without any
+      warning. `docs/control-protocol.md` warns about token leakage via query parameters,
+      but this example silently encourages a pattern that logs credentials in shell
+      history, server logs, and process lists.
+    current_code: '### Auth
+
+
+      If the OpenCode server requires basic auth:
+
+
+      ```sh
+
+      --server-url http://user:pass@127.0.0.1:4096
+
+      ```
+
+      '
+    discussion: []
+  assert:
+  - type: javascript
+    value: 'output.includes(''"classification": "still_valid"'') || output.includes(''"classification":"still_valid"'')'
+  - type: javascript
+    value: 'output.includes(''"disposition": "needs_action"'') || output.includes(''"disposition":"needs_action"'')'

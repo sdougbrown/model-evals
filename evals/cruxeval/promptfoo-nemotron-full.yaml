@@ -1,0 +1,39 @@
+# CRUXEval-O — nemotron FULL gauntlet (50-test tests.yaml, seed=42)
+# Replaces the earlier 10-test light run (tests-10.yaml).
+# nemotron = thinking (large max_tokens so it spills past reasoning into content)
+# nemotron-instruct = non-thinking
+description: "CRUXEval-O: nemotron full run — think vs no-think (pass@1, 50 tests)"
+
+evaluateOptions:
+  maxConcurrency: 3
+
+providers:
+  - id: openai:chat:nemotron
+    label: nemotron (think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: nemotron
+      max_tokens: 8192
+
+  - id: openai:chat:nemotron-instruct
+    label: nemotron-instruct (no-think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: nemotron-instruct
+      max_tokens: 256
+
+prompts:
+  - |
+    You are given a Python function. Determine what it returns when called with the provided input.
+
+    ```python
+    {{code}}
+    ```
+
+    What does `{{input}}` return?
+
+    Respond with ONLY the Python literal return value — for example: `42`, `'hello'`, `[1, 2, 3]`, `None`, `True`. No explanation, no code block, just the value.
+
+tests: file://tests.yaml

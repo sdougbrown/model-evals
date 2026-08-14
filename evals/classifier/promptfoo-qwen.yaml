@@ -1,0 +1,31 @@
+# Classifier eval — qwen (dense 27B) on the local gateway.
+# Does the model correctly classify umpire-bot re-review findings?
+# Source: real findings from avenor PRs with known ground-truth classification.
+# qwen & qwen-code think; qwen-instruct answers directly.
+# Assertions are deterministic JSON field checks (no judge model).
+description: "Classifier: qwen (dense 27B) finding re-classification"
+
+evaluateOptions:
+  maxConcurrency: 3
+
+providers:
+  - id: openai:chat:qwen
+    label: qwen (think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: qwen
+      max_tokens: 8192
+
+  - id: openai:chat:qwen-instruct
+    label: qwen-instruct (no-think)
+    config:
+      apiBaseUrl: "http://localhost:4000/v1"
+      apiKey: none
+      model: qwen-instruct
+      max_tokens: 1024
+
+prompts:
+  - file://prompt.js
+
+tests: file://tests.yaml
