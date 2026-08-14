@@ -1,3 +1,4 @@
 .venv/
+__pyxache__/
 evals/cruxeval/tests.yaml
 evals/pr-review/testdata/*.diff
