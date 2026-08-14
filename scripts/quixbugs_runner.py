@@ -157,7 +157,7 @@ def extract_python(text):
     return text
 
 
-def grade_model(model, programs, gateway, max_samples=None, sleep=0.0):
+def grade_model(model, programs, gateway, max_samples=None, sleep=0.0, max_tokens=8192):
     results = []
     for i, prog in enumerate(programs):
         if max_samples and i >= max_samples:
@@ -167,7 +167,7 @@ def grade_model(model, programs, gateway, max_samples=None, sleep=0.0):
             continue
         msgs = [{"role": "user", "content": build_prompt(prog)}]
         try:
-            resp = gateway_chat(model, msgs, gateway)
+            resp = gateway_chat(model, msgs, gateway, max_tokens=max_tokens)
         except Exception as e:
             results.append({"prog": name, "status": "gateway_error", "detail": str(e)})
             continue
@@ -212,6 +212,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--models", nargs="+", default=["nemotron"])
     ap.add_argument("--gateway", default="http://localhost:4000/v1")
+    ap.add_argument("--max-tokens", type=int, default=8192)
     ap.add_argument("--max-samples", type=int, default=None)
     ap.add_argument("--save", default="results/quixbugs.json")
     args = ap.parse_args()
@@ -226,7 +227,7 @@ def main():
     allout = {}
     for model in args.models:
         st = time.time()
-        res = grade_model(model, programs, args.gateway, args.max_samples)
+        res = grade_model(model, programs, args.gateway, args.max_samples, max_tokens=args.max_tokens)
         summ = summarize(model, res)
         allout[model] = {"results": res, "summary": summ, "seconds": round(time.time() - st)}
         if args.save:

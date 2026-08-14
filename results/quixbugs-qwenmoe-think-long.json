@@ -1,0 +1,34 @@
+{
+  "qwen-moe": {
+    "results": [
+      {
+        "prog": "bucketsort",
+        "status": "fixed",
+        "passed": 7,
+        "need": 7,
+        "sample": "\n\n```python\ndef bucketsort(arr, k):\n    counts = [0] * k\n    for x in arr:\n        counts[x] += 1\n\n    sorted_arr = []\n    for i, count in enumerate(counts):\n        sorted_arr.extend([i] * count)\n\n    return sorted_arr\n```"
+      },
+      {
+        "prog": "find_in_sorted",
+        "status": "notfixed",
+        "passed": 5,
+        "need": 7,
+        "sample": ""
+      },
+      {
+        "prog": "gcd",
+        "status": "fixed",
+        "passed": 6,
+        "need": 6,
+        "sample": "\n\n```python\ndef gcd(a, b):\n    if b == 0:\n        return a\n    else:\n        return gcd(b, a % b)\n```"
+      }
+    ],
+    "summary": {
+      "model": "qwen-moe",
+      "fixed": 2,
+      "part": 0,
+      "n": 3
+    },
+    "seconds": 667
+  }
+}

@@ -42,11 +42,12 @@ suite; `fixed` = passes everything the correct version passes. No LLM judge.
 | qwen-moe (think) | 1/23 = 4% | see caveat below — collapses in think mode |
 | qwen-moe-instruct (no-think) | 14/23 = 61% | 14 fixed, 2 part, 7 notfixed |
 
-Note: qwen-moe-think's 1/23 is striking but consistent with the broader pattern — every
-thinking variant either fails to help (nemotron flat) or actively hurts (qwen-dense
-83%→65%). qwen-moe-think is the most extreme: it burns ~8K tokens reasoning per program
-and then emits a still-buggy (or token-truncated) function. Worth re-running with a shim
-if this matters to you; the no-think 14/23 is the more representative signal.
+Note: qwen-moe-think's 1/23 was largely a token-exhaustion artifact, NOT a true ability
+ceiling. A 24K-token re-run on the 3 programs it had collapsed on fixed 2/3 (bucketsort,
+gcd fixed; find_in_sorted still broken). Longer leash recovers most of its bug-fixing.
+Even so, thinking is not a free win: find_in_sorted stayed notfixed, and no-think
+qwen-moe-mult is 14/23 while qwen-instruct no-think is 19/23. Full long-leash run is the
+remaining open question (~1-1.5h for all 23 at 24K tokens).
 
 ## Takeaways for reviewer/mule trialing
 
