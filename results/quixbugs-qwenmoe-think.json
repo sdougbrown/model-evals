@@ -1,0 +1,174 @@
+{
+  "qwen-moe": {
+    "results": [
+      {
+        "prog": "bucketsort",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 7,
+        "sample": ""
+      },
+      {
+        "prog": "find_in_sorted",
+        "status": "notfixed",
+        "passed": 5,
+        "need": 7,
+        "sample": ""
+      },
+      {
+        "prog": "gcd",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 6,
+        "sample": ""
+      },
+      {
+        "prog": "get_factors",
+        "status": "fixed",
+        "passed": 11,
+        "need": 11,
+        "sample": "\n\n```python\ndef get_factors(n):\n    if n == 1:\n        return []\n\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0:\n            return [i] + get_factors(n // i)\n\n    return [n]\n```"
+      },
+      {
+        "prog": "is_valid_parenthesization",
+        "status": "notfixed",
+        "passed": 2,
+        "need": 3,
+        "sample": ""
+      },
+      {
+        "prog": "kth",
+        "status": "notfixed",
+        "passed": 3,
+        "need": 7,
+        "sample": ""
+      },
+      {
+        "prog": "lcs_length",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 9,
+        "sample": ""
+      },
+      {
+        "prog": "lis",
+        "status": "notfixed",
+        "passed": 8,
+        "need": 12,
+        "sample": ""
+      },
+      {
+        "prog": "longest_common_subsequence",
+        "status": "notfixed",
+        "passed": 6,
+        "need": 10,
+        "sample": ""
+      },
+      {
+        "prog": "max_sublist_sum",
+        "status": "part",
+        "passed": 5,
+        "need": 6,
+        "sample": "\n\n```python\ndef max_sublist_sum(arr):\n    max_ending_here = 0\n    max_so_far = float('-inf')\n\n    for x in arr:\n        max_ending_here += x\n        max_so_far = max(max_so_far, max_ending_here)\n        if max_ending_here < 0:\n            max_ending_here = 0\n\n    return max_so_far\n```"
+      },
+      {
+        "prog": "mergesort",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 14,
+        "sample": ""
+      },
+      {
+        "prog": "next_palindrome",
+        "status": "notfixed",
+        "passed": 4,
+        "need": 5,
+        "sample": ""
+      },
+      {
+        "prog": "next_permutation",
+        "status": "noexecute",
+        "passed": null,
+        "need": 8,
+        "sample": ""
+      },
+      {
+        "prog": "pascal",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 5,
+        "sample": ""
+      },
+      {
+        "prog": "possible_change",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 10,
+        "sample": ""
+      },
+      {
+        "prog": "powerset",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 5,
+        "sample": ""
+      },
+      {
+        "prog": "quicksort",
+        "status": "notfixed",
+        "passed": 12,
+        "need": 13,
+        "sample": ""
+      },
+      {
+        "prog": "rpn_eval",
+        "status": "notfixed",
+        "passed": 3,
+        "need": 6,
+        "sample": ""
+      },
+      {
+        "prog": "shunting_yard",
+        "status": "notfixed",
+        "passed": 2,
+        "need": 6,
+        "sample": ""
+      },
+      {
+        "prog": "sieve",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 6,
+        "sample": ""
+      },
+      {
+        "prog": "subsequences",
+        "status": "notfixed",
+        "passed": 2,
+        "need": 12,
+        "sample": ""
+      },
+      {
+        "prog": "to_base",
+        "status": "notfixed",
+        "passed": 3,
+        "need": 10,
+        "sample": ""
+      },
+      {
+        "prog": "wrap",
+        "status": "notfixed",
+        "passed": 0,
+        "need": 5,
+        "sample": ""
+      }
+    ],
+    "summary": {
+      "model": "qwen-moe",
+      "fixed": 1,
+      "part": 1,
+      "n": 23
+    },
+    "seconds": 2192
+  }
+}

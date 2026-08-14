@@ -39,6 +39,15 @@ suite; `fixed` = passes everything the correct version passes. No LLM judge.
 | nemotron (think) | 15/23 = 65% | 15 fixed, 7 notfixed, 1 no-code |
 | qwen (think) | 15/23 = 65% | 15 fixed, 7 notfixed, 1 no-code |
 
+| qwen-moe (think) | 1/23 = 4% | see caveat below — collapses in think mode |
+| qwen-moe-instruct (no-think) | 14/23 = 61% | 14 fixed, 2 part, 7 notfixed |
+
+Note: qwen-moe-think's 1/23 is striking but consistent with the broader pattern — every
+thinking variant either fails to help (nemotron flat) or actively hurts (qwen-dense
+83%→65%). qwen-moe-think is the most extreme: it burns ~8K tokens reasoning per program
+and then emits a still-buggy (or token-truncated) function. Worth re-running with a shim
+if this matters to you; the no-think 14/23 is the more representative signal.
+
 ## Takeaways for reviewer/mule trialing
 
 - **Mule = use qwen-instruct (no-think).** Fastest AND best bug-fixing (83%) — beats

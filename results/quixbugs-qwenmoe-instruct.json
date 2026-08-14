@@ -1,0 +1,174 @@
+{
+  "qwen-moe-instruct": {
+    "results": [
+      {
+        "prog": "bucketsort",
+        "status": "fixed",
+        "passed": 7,
+        "need": 7,
+        "sample": "```python\ndef bucketsort(arr, k):\n    counts = [0] * k\n    for x in arr:\n        counts[x] += 1\n\n    sorted_arr = []\n    for i, count in enumerate(counts):\n        sorted_arr.extend([i] * count)\n\n    return sorted_arr\n```"
+      },
+      {
+        "prog": "find_in_sorted",
+        "status": "fixed",
+        "passed": 7,
+        "need": 7,
+        "sample": "```python\ndef find_in_sorted(arr, x):\n    def binsearch(start, end):\n        if start >= end:\n            return -1\n        mid = start + (end - start) // 2\n        if x < arr[mid]:\n            return binsearch(start, mid)\n        elif x > arr[mid]:\n            return binsearch(mid + 1, end)\n       "
+      },
+      {
+        "prog": "gcd",
+        "status": "fixed",
+        "passed": 6,
+        "need": 6,
+        "sample": "```python\ndef gcd(a, b):\n    if b == 0:\n        return a\n    else:\n        return gcd(b, a % b)\n```"
+      },
+      {
+        "prog": "get_factors",
+        "status": "fixed",
+        "passed": 11,
+        "need": 11,
+        "sample": "```python\ndef get_factors(n):\n    if n == 1:\n        return []\n\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0:\n            return [i] + get_factors(n // i)\n\n    return [n]\n```"
+      },
+      {
+        "prog": "is_valid_parenthesization",
+        "status": "fixed",
+        "passed": 3,
+        "need": 3,
+        "sample": "```python\ndef is_valid_parenthesization(parens):\n    depth = 0\n    for paren in parens:\n        if paren == '(':\n            depth += 1\n        else:\n            depth -= 1\n            if depth < 0:\n                return False\n\n    return depth == 0\n```"
+      },
+      {
+        "prog": "kth",
+        "status": "fixed",
+        "passed": 7,
+        "need": 7,
+        "sample": "```python\ndef kth(arr, k):\n    pivot = arr[0]\n    below = [x for x in arr if x < pivot]\n    above = [x for x in arr if x > pivot]\n\n    num_less = len(below)\n    num_lessoreq = len(arr) - len(above)\n\n    if k < num_less:\n        return kth(below, k)\n    elif k >= num_lessoreq:\n        return kth(abov"
+      },
+      {
+        "prog": "lcs_length",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 9,
+        "sample": "```python\ndef lcs_length(s, t):\n    from collections import Counter\n\n    dp = Counter()\n\n    for i in range(len(s)):\n        for j in range(len(t)):\n            if s[i] == t[j]:\n                dp[i, j] = dp[i - 1, j] + 1\n\n    return max(dp.values()) if dp else 0\n```"
+      },
+      {
+        "prog": "lis",
+        "status": "notfixed",
+        "passed": 8,
+        "need": 12,
+        "sample": "```python\ndef lis(arr):\n    if not arr:\n        return 0\n\n    ends = {}\n    longest = 0\n\n    for i, val in enumerate(arr):\n\n        prefix_lengths = [j for j in range(1, longest + 1) if arr[ends[j]] < val]\n\n        length = max(prefix_lengths) if prefix_lengths else 0\n\n        if length == longest o"
+      },
+      {
+        "prog": "longest_common_subsequence",
+        "status": "fixed",
+        "passed": 10,
+        "need": 10,
+        "sample": "```python\ndef longest_common_subsequence(a, b):\n    if not a or not b:\n        return ''\n\n    elif a[0] == b[0]:\n        return a[0] + longest_common_subsequence(a[1:], b[1:])\n\n    else:\n        return max(\n            longest_common_subsequence(a, b[1:]),\n            longest_common_subsequence(a[1:"
+      },
+      {
+        "prog": "max_sublist_sum",
+        "status": "part",
+        "passed": 5,
+        "need": 6,
+        "sample": "```python\ndef max_sublist_sum(arr):\n    if not arr:\n        return 0\n    \n    max_ending_here = arr[0]\n    max_so_far = arr[0]\n\n    for x in arr[1:]:\n        max_ending_here = max(x, max_ending_here + x)\n        max_so_far = max(max_so_far, max_ending_here)\n\n    return max_so_far\n```"
+      },
+      {
+        "prog": "mergesort",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 14,
+        "sample": "```python\ndef mergesort(arr):\n    def merge(left, right):\n        result = []\n        i = 0\n        j = 0\n        while i < len(left) and j < len(right):\n            if left[i] <= right[j]:\n                result.append(left[i])\n                i += 1\n            else:\n                result.append("
+      },
+      {
+        "prog": "next_palindrome",
+        "status": "notfixed",
+        "passed": 4,
+        "need": 5,
+        "sample": "```python\ndef next_palindrome(digit_list):\n    high_mid = len(digit_list) // 2\n    low_mid = (len(digit_list) - 1) // 2\n    while high_mid < len(digit_list) and low_mid >= 0:\n        if digit_list[high_mid] == 9:\n            digit_list[high_mid] = 0\n            digit_list[low_mid] = 0\n            hi"
+      },
+      {
+        "prog": "next_permutation",
+        "status": "fixed",
+        "passed": 8,
+        "need": 8,
+        "sample": "```python\ndef next_permutation(perm):\n    for i in range(len(perm) - 2, -1, -1):\n        if perm[i] < perm[i + 1]:\n            for j in range(len(perm) - 1, i, -1):\n                if perm[j] > perm[i]:\n                    next_perm = list(perm)\n                    next_perm[i], next_perm[j] = perm["
+      },
+      {
+        "prog": "pascal",
+        "status": "fixed",
+        "passed": 5,
+        "need": 5,
+        "sample": "```python\ndef pascal(n):\n    rows = [[1]]\n    for r in range(1, n):\n        row = []\n        for c in range(r + 1):\n            upleft = rows[r - 1][c - 1] if c > 0 else 0\n            upright = rows[r - 1][c] if c < r else 0\n            row.append(upleft + upright)\n        rows.append(row)\n\n    retu"
+      },
+      {
+        "prog": "possible_change",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 10,
+        "sample": "```python\ndef possible_change(coins, total):\n    if total == 0:\n        return 1\n    if total < 0:\n        return 0\n\n    first, *rest = coins\n    return possible_change(coins, total - first) + possible_change(rest, total)\n```"
+      },
+      {
+        "prog": "powerset",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 5,
+        "sample": "```python\ndef powerset(arr):\n    if not arr:\n        return [[]]\n    first, *rest = arr\n    rest_subsets = powerset(rest)\n    return [[first] + subset for subset in rest_subsets] + rest_subsets\n```"
+      },
+      {
+        "prog": "quicksort",
+        "status": "fixed",
+        "passed": 13,
+        "need": 13,
+        "sample": "```python\ndef quicksort(arr):\n    if not arr:\n        return []\n\n    pivot = arr[0]\n    lesser = quicksort([x for x in arr[1:] if x < pivot])\n    equal = [x for x in arr[1:] if x == pivot]\n    greater = quicksort([x for x in arr[1:] if x > pivot])\n    return lesser + [pivot] + equal + greater\n```"
+      },
+      {
+        "prog": "rpn_eval",
+        "status": "fixed",
+        "passed": 6,
+        "need": 6,
+        "sample": "```python\ndef rpn_eval(tokens):\n    def op(symbol, a, b):\n        return {\n            '+': lambda a, b: a + b,\n            '-': lambda a, b: a - b,\n            '*': lambda a, b: a * b,\n            '/': lambda a, b: a / b\n        }[symbol](a, b)\n\n    stack = []\n\n    for token in tokens:\n        if i"
+      },
+      {
+        "prog": "shunting_yard",
+        "status": "fixed",
+        "passed": 6,
+        "need": 6,
+        "sample": "```python\ndef shunting_yard(tokens):\n    precedence = {\n        '+': 1,\n        '-': 1,\n        '*': 2,\n        '/': 2\n    }\n\n    rpntokens = []\n    opstack = []\n    for token in tokens:\n        if isinstance(token, int):\n            rpntokens.append(token)\n        else:\n            while opstack an"
+      },
+      {
+        "prog": "sieve",
+        "status": "part",
+        "passed": 2,
+        "need": 6,
+        "sample": "```python\ndef sieve(max):\n    primes = []\n    for n in range(2, max + 1):\n        if any(n % p > 0 for p in primes) or not primes:\n            primes.append(n)\n    return primes\n```"
+      },
+      {
+        "prog": "subsequences",
+        "status": "notfixed",
+        "passed": 2,
+        "need": 12,
+        "sample": "```python\ndef subsequences(a, b, k):\n    if k == 0:\n        return []\n\n    ret = []\n    for i in range(a, b + 1 - k):\n        rest_list = subsequences(i + 1, b, k - 1)\n        if not rest_list and k > 1:\n            continue\n        for rest in rest_list:\n            ret.append([i] + rest)\n\n    retu"
+      },
+      {
+        "prog": "to_base",
+        "status": "fixed",
+        "passed": 10,
+        "need": 10,
+        "sample": "```python\nimport string\ndef to_base(num, b):\n    result = ''\n    alphabet = string.digits + string.ascii_uppercase\n    if num == 0:\n        return '0'\n    while num > 0:\n        i = num % b\n        num = num // b\n        result = alphabet[i] + result\n    return result\n```"
+      },
+      {
+        "prog": "wrap",
+        "status": "fixed",
+        "passed": 5,
+        "need": 5,
+        "sample": "```python\ndef wrap(text, cols):\n    lines = []\n    while len(text) > cols:\n        end = text.rfind(' ', 0, cols + 1)\n        if end == -1:\n            end = cols\n        line, text = text[:end], text[end:]\n        lines.append(line)\n\n    # Append the remaining text as the last line\n    if text:\n   "
+      }
+    ],
+    "summary": {
+      "model": "qwen-moe-instruct",
+      "fixed": 14,
+      "part": 2,
+      "n": 23
+    },
+    "seconds": 39
+  }
+}

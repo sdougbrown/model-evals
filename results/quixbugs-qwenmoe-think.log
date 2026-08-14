@@ -1,0 +1,30 @@
+Loaded 23 KEEP QuixBugs programs:
+  bucketsort                 buggy passes 1/7  (first failing: f([[], 14]) expected [])
+  find_in_sorted             buggy passes 5/7  (first failing: f([[3, 4, 5, 5, 5, 5, 6], 5]) expected 3)
+  gcd                        buggy passes 1/6  (first failing: f([3, 12]) expected 3)
+  get_factors                buggy passes 1/11  (first failing: f([1]) expected [])
+  is_valid_parenthesization  buggy passes 2/3  (first failing: f(['((']) expected False)
+  kth                        buggy passes 3/7  (first failing: f([[2, 6, 8, 3, 5, 7], 0]) expected 2)
+  lcs_length                 buggy passes 1/9  (first failing: f(['fun', '']) expected 0)
+  lis                        buggy passes 8/12  (first failing: f([[]]) expected 0)
+  longest_common_subsequence buggy passes 6/10  (first failing: f(['ABCD', 'XBCYDQ']) expected 'BCD')
+  max_sublist_sum            buggy passes 2/6  (first failing: f([[3, 4, 5]]) expected 12)
+  mergesort                  buggy passes 1/14  (first failing: f([[]]) expected [])
+  next_palindrome            buggy passes 4/5  (first failing: f([[1, 3, 1]]) expected [1, 4, 1])
+  next_permutation           buggy passes 0/8  (first failing: f([[3, 4, 5]]) expected [3, 5, 4])
+  pascal                     buggy passes 1/5  (first failing: f([1]) expected [[1]])
+  possible_change            buggy passes 1/10  (first failing: f([[1, 4, 2], -7]) expected 0)
+  powerset                   buggy passes 1/5  (first failing: f([[]]) expected [[]])
+  quicksort                  buggy passes 12/13  (first failing: f([[5, 4, 3, 2, 1]]) expected [1, 2, 3, 4, 5])
+  rpn_eval                   buggy passes 3/6  (first failing: f([[2.0, 2.0, '+']]) expected 4.0)
+  shunting_yard              buggy passes 2/6  (first failing: f([[]]) expected [])
+  sieve                      buggy passes 1/6  (first failing: f([1]) expected [])
+  subsequences               buggy passes 2/12  (first failing: f([30, 2, 3]) expected [])
+  to_base                    buggy passes 3/10  (first failing: f([16, 19]) expected 'G')
+  wrap                       buggy passes 0/5  (first failing: f(['The leaves did not stir on the trees, grasshoppers chirruped, and the monotonous hollow sound of the sea rising up from below, spoke of the peace, of the eternal sleep awaiting us. So it must have sounded when there was no Yalta, no Oreanda here; so it sounds now, and it will sound as indifferently and monotonously when we are all no more. And in this constancy, in this complete indifference to the life and death of each of us, there lies hid, perhaps, a pledge of our eternal salvation, of the unceasing movement of life upon earth, of unceasing progress towards perfection. Sitting beside a young woman who in the dawn seemed so lovely, soothed and spellbound in these magical surroundings - the sea, mountains, clouds, the open sky - Gurov thought how in reality everything is beautiful in this world when one reflects: everything except what we think or do ourselves when we forget our human dignity and the higher aims of our existence.', 140]) expected ['The leaves did not stir on the trees, grasshoppers chirruped, and the monotonous hollow sound of the sea rising up from below, spoke of the', ' peace, of the eternal sleep awaiting us. So it must have sounded when there was no Yalta, no Oreanda here; so it sounds now, and it will', ' sound as indifferently and monotonously when we are all no more. And in this constancy, in this complete indifference to the life and death', ' of each of us, there lies hid, perhaps, a pledge of our eternal salvation, of the unceasing movement of life upon earth, of unceasing', ' progress towards perfection. Sitting beside a young woman who in the dawn seemed so lovely, soothed and spellbound in these magical', ' surroundings - the sea, mountains, clouds, the open sky - Gurov thought how in reality everything is beautiful in this world when one', ' reflects: everything except what we think or do ourselves when we forget our human dignity and the higher aims of our existence.'])
+
+=== qwen-moe ===
+  fixed: 1/23   part: 1   notfixed: 20   noexec/no-code: 1
+
+=== SUMMARY ===
+  qwen-moe: 1 fixed / 23 kept  (part 1)
