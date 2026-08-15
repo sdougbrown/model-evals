@@ -1,0 +1,6 @@
+Loaded 23 KEEP programs (using CORRECT/bug-free sources)
+
+== gemma4-high ==  false positives: 13/23  (57%)
+
+=== FP RATE SUMMARY (lower = better) ===
+  gemma4-high                13/23 = 57% falsely flagged

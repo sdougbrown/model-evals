@@ -1,0 +1,193 @@
+{
+  "nemotron-instruct": {
+    "results": [
+      {
+        "prog": "bucketsort",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model reported 'NO ISSUE', so it did not claim a bug exists. The provided function source appears correct assuming array elements are in range "
+      },
+      {
+        "prog": "find_in_sorted",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model reported no issue. The function implements a standard binary search correctly for a sorted array; it should return the index of x or -1 i"
+      },
+      {
+        "prog": "gcd",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model reported no issue, which is correct. The gcd function is a standard recursive Euclidean algorithm and is correct.\"}"
+      },
+      {
+        "prog": "get_factors",
+        "claimed": true,
+        "real": false,
+        "fp": true,
+        "finding": "The provided code contains a bug. The old version commented out in the snippet (the one without triple quotes) demonstrates the issue, while the active version has a subtle correctness problem.\n\n### Bug 1: Infinite Recursion for Prime Numbers\n**Expression:** `return [n]`\n**Why it's wrong:** When the input `n` is a prime number, the `for` loop iterates through all values from 2 to $\\sqrt{n}$ without finding a divisor. Since the loop completes without triggering the `return` statement inside it, t",
+        "judge": "{\n  \"claimed_bug\": true,\n  \"real_bug\": false,\n  \"reason\": \"The model claims a bug in the active function, specifically that the final `return [n]` causes infinite recursion or incorrect behavior for p"
+      },
+      {
+        "prog": "is_valid_parenthesization",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model replied 'NO ISSUE', meaning it did not claim any bug. The function is correct for validating parentheses, so there is no false positive.\""
+      },
+      {
+        "prog": "kth",
+        "claimed": true,
+        "real": false,
+        "fp": true,
+        "finding": "BUG: Line 7\nThe expression `num_lessoreq = len(arr) - len(above)` is incorrect. This calculates the count of elements less than or equal to the pivot, but only works correctly if all elements in `above` are strictly greater than the pivot. If the array contains duplicate values equal to the pivot, elements equal to the pivot will be included in the `above` list, causing `num_lessoreq` to undercount the elements less than or equal to the pivot. This breaks the logic for selecting the k-th element",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": false, \"reason\": \"The model reports multiple bugs but the function is actually correct. The list comprehensions filter strictly less and strictly greater, so duplicat"
+      },
+      {
+        "prog": "lcs_length",
+        "claimed": true,
+        "real": true,
+        "fp": false,
+        "finding": "The provided function has the following bug:\n\n*   **Line 11:** `dp[i, j] = dp[i - 1, j - 1] + 1`\n*   **Why it's wrong:** The function attempts to access `dp[i - 1, j - 1]`. When `i = 0` or `j = 0`, this results in negative indices (e.g., `dp[-1, j - 1]`). In Python, negative indices access elements from the end of the data structure, which means the function will incorrectly compute the LCS length by treating non-existent characters as valid predecessors, or potentially cause a `KeyError` if the",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": true, \"reason\": \"The model correctly identifies a bug: negative indices access from the end of the Counter, causing incorrect values or KeyError, and the recurrence i"
+      },
+      {
+        "prog": "lis",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model reported no issue, and no bug claim was made. The function appears to be a valid implementation of the patience sorting method for LIS us"
+      },
+      {
+        "prog": "longest_common_subsequence",
+        "claimed": true,
+        "real": false,
+        "fp": true,
+        "finding": "BUG: Line 9: Incorrect use of `key=len` in `max`.\nThe `key=len` argument compares the **length** of the resulting strings rather than their lexical or structural value. In the context of finding the Longest Common Subsequence (LCS), the goal is to find the longest string. However, `max` with `key=len` will return the string with the greatest length *among the two recursive results*. If the two recursive results have different lengths, `max` will correctly return the longer one. If they have the ",
+        "judge": "{\n  \"claimed_bug\": true,\n  \"real_bug\": false,\n  \"reason\": \"The model's reply asserts a bug in the use of key=len but ultimately concludes the function is correct. The claimed issue is not a real bug b"
+      },
+      {
+        "prog": "max_sublist_sum",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model reported no issue, and the function correctly implements Kadane's algorithm for maximum subarray sum (handling all-negative arrays by ret"
+      },
+      {
+        "prog": "mergesort",
+        "claimed": true,
+        "real": false,
+        "fp": true,
+        "finding": "# Bug Analysis\n\nI found the following bug:\n\n## Line 17: `result.extend(left[i:] or right[j:])`\n\n**Why it's wrong:** The expression `left[i:] or right[j:]` uses Python's `or` operator, which returns the first truthy value. If `left[i:]` is an empty list `[]`, Python treats it as falsy, so `or` would incorrectly return `right[j:]` even when there are remaining elements in `left`. This causes elements to be missed during the merge step.\n\n**What it should be:** `result.extend(left[i:] + right[j:])` ",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": false, \"reason\": \"The model claims bug in line 17: the expression `left[i:] or right[j:]` is actually correct for merge sort because after the while loop, at most one"
+      },
+      {
+        "prog": "next_palindrome",
+        "claimed": true,
+        "real": false,
+        "fp": true,
+        "finding": "There is one bug in the function.\n\n**Line 6:** `digit_list[low_mid] += 1`\n\nThis line can cause an `IndexError` when the input `digit_list` has a length of 1. \n\n**Why it is wrong:**\nWhen `digit_list` has only one element (e.g., `[5]`), the calculation `low_mid = (len(digit_list) - 1) // 2` results in `low_mid = 0`. Because the length is 1, `high_mid` is also `0`. The condition `low_mid != high_mid` evaluates to `False`, so the `if` block is skipped. However, the code still executes `digit_list[lo",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": false, \"reason\": \"The model claims a bug, but the actual code condition `if low_mid != high_mid:` correctly guards the `low_mid` assignment, and for a single-element "
+      },
+      {
+        "prog": "next_permutation",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model replied 'NO ISSUE' meaning it did not claim a bug exists. The function appears to implement next permutation correctly, as does the comme"
+      },
+      {
+        "prog": "pascal",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model correctly reported no issue; the Pascal function implementation is valid for all positive n and edge cases, producing the expected rows.\""
+      },
+      {
+        "prog": "possible_change",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model reported NO ISSUE, so it did not claim any bug. The function is a standard recursive implementation of counting coin change combinations "
+      },
+      {
+        "prog": "powerset",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model correctly identified no bug in the provided function. The powerset function correctly generates all subsets by recursion: for a non-empty"
+      },
+      {
+        "prog": "quicksort",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model reported no issue, which is accurate because the function correctly implements quicksort and handles duplicate values by partitioning wit"
+      },
+      {
+        "prog": "rpn_eval",
+        "claimed": true,
+        "real": false,
+        "fp": true,
+        "finding": "The function has the following bug:\n\n**Line: `op(token, b, a)`**\n\nThe function pops `a` first, then `b`. In standard RPN evaluation, the first popped value is the second operand, and the second popped value is the first operand. For a non-commutative operation like subtraction, `a - b` yields the wrong result. The call `op(token, b, a)` correctly passes the operands in the expected order `(first_popped, second_popped)`, but the lambda definitions inside `op` expect the parameters in the order `(",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": false, \"reason\": \"The model claims a bug in operand order, but the actual code's op() uses the symbol dictionary with (a,b) as b-a etc., and the call op(token, b, a) "
+      },
+      {
+        "prog": "shunting_yard",
+        "claimed": true,
+        "real": false,
+        "fp": true,
+        "finding": "The function has bugs. Here are the precise descriptions:\n\n1.  **Missing operand processing for operators**.\n    *   **Line**: `else:`\n    *   **Why it's wrong**: When the token is an operator (e.g., `+`, `*`), the code only manages the operator stack (`opstack`). It never appends the operator itself to the output RPN list (`rpntokens`), nor does it process any operands that may be pending or associated with the token. In a standard Shunting Yard algorithm, an operator token must eventually be p",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": false, \"reason\": \"The model's claims are false positives. The function actually handles operators correctly (bug claim 1 is incorrect because the operator is appended"
+      },
+      {
+        "prog": "sieve",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model replied 'NO ISSUE', so it did not claim any bug. The function itself correctly implements the simple trial-division sieve.\"}"
+      },
+      {
+        "prog": "subsequences",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model reported no issue, and the function correctly generates all k-length combinations in increasing order. The loop bound b + 1 - k ensures e"
+      },
+      {
+        "prog": "to_base",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model reports NO ISSUE. The function to_base correctly converts a positive integer to a base-b string for bases up to 36 (using digits and uppe"
+      },
+      {
+        "prog": "wrap",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model reported no issue with the function. The function appears to correctly implement a word-wrapping algorithm that breaks text at spaces nea"
+      }
+    ],
+    "fp": 7,
+    "n": 23,
+    "noissue_clean": 16
+  }
+}
