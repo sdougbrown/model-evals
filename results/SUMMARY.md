@@ -96,3 +96,15 @@ stable, reasoning=high gives it the top reviewer recall.
 - QuixBugs grading can't reproduce a fix if the model emits prose instead of a `def`
   block (1 "no-code" per thinking model) — extract_python strips markdown, else falls
   back to the last function block.
+
+## qwen FP rate vs thinking budget
+FP on 23 bug-free programs (lower=better). Thinking budget trades precision for recall:
+| reasoning | (=old model) | FP | identify recall |
+|---|---|---|---|
+| none | qwen-instruct | 1/23 = 4% | 15/23 |
+| low | qwen-code | 2/23 = 9% | 16/23 |
+| max (default) | qwen | 3/23 = 13% | 18/23 |
+| high | capped-high | 4/23 = 17% | (pending) |
+| xhigh | capped-xhigh | 6/23 = 26% | (pending) |
+Monotonic: more thinking => more false alarms on clean code (4% -> 26%). high/xhigh recall (identify)
+not yet measured; would complete the tradeoff curve.
