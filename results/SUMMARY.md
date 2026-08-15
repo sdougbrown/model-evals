@@ -108,3 +108,19 @@ FP on 23 bug-free programs (lower=better). Thinking budget trades precision for 
 | xhigh | capped-xhigh | 6/23 = 26% | (pending) |
 Monotonic: more thinking => more false alarms on clean code (4% -> 26%). high/xhigh recall (identify)
 not yet measured; would complete the tradeoff curve.
+
+## Judge / triage-verification eval
+Each model VERIFIES the same 41 findings (gemma-no-think's identifications on buggy code +
+phantom findings on clean code), reference = deepseek-flash verdict. Okay to reuse.
+| judge | agree (41) | posts-bad | suppresses-real |
+|---|---|---|---|
+| deepseek-flash | 29 = 71% | 8 | 4 |
+| qwen (low) | 23 = 56% | 14 | 3 |
+| qwen (max) | 23 = 56% | 12 | 3 |
+| nemotron-instruct | 22 = 54% | 9 | 10 |
+| gemma4 | 20 = 49% | 19 | 2 |
+| gemma4-high | 20 = 49% | 19 | 2 |
+| nemotron | 18 = 44% | 15 | 2 |
+posts-bad = would post a phantom; suppresses-real = would drop a real finding. qwen is the best
+local judge and the only strong model on both discovery and verification; gemma discovers well
+but rubber-stamps as judge; nemotron-instruct is over-conservative (drops real findings).
