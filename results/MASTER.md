@@ -9,8 +9,8 @@ All current-session numbers, local gateway. Full detail in SUMMARY.md + raw JSON
 | qwen-instruct (no-think) | 37 = 74% | 6 | 15 |
 | nemotron (think) | 41 = 84% | 5 | 10 |
 | nemotron-instruct (no-think) | 20 = 42% | 3 | 10 |
-| gemma4 (no-think) | 33 = 66% | 6 | 19 |
-| gemma4 (reasoning=high) | 33 = 66%* | 6 | 20 |
+| gemma4 (no-think) | 35 = 70% (retuned) | 6 | 19 |
+| gemma4 (reasoning=high) | 35 = 70%* (retuned) | 6 | 20 |
 | qwen-moe (think) | 30 = 60% (hist) | 5 | 13 |
 | qwen-moe-instruct (no-think) | 27 = 54% (hist) | 3 | 14 |
 
