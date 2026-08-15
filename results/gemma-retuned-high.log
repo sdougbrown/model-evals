@@ -1,0 +1,7 @@
+Loaded 23 KEEP programs for identification
+
+== gemma4 ==
+  recall (correct/total) = 20/23   wrong=3  ambiguous/judge-err=0
+
+=== RECALL SUMMARY ===
+  gemma4                     20/23
