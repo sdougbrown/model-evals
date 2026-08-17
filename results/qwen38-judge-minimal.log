@@ -1,0 +1,4 @@
+Judge dataset: 41 findings  (accept=19, reject=22)
+  qwen-3.8:27b           agree 21/41 (51%)   posts-bad 14   suppresses-real 3
+
+triage angles: posts-bad = false accept (bad finding would be posted); suppresses-real = false reject.

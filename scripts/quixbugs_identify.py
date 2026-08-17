@@ -91,7 +91,7 @@ def judge_prompt(prog):
 
 Please output your JSON verdict exactly."""
 
-def grade_identification(model, programs, gateway, judge, max_samples=None, reasoning=None):
+def grade_identification(model, programs, gateway, judge, max_samples=None, reasoning=None, max_tokens=1500):
     results = []
     for i, prog in enumerate(programs):
         if max_samples and i >= max_samples:
@@ -100,7 +100,7 @@ def grade_identification(model, programs, gateway, judge, max_samples=None, reas
         if prog["failing"] is None:
             continue
         try:
-            resp = chat(model, [{"role": "user", "content": identify_prompt(prog)}], gateway, max_tokens=1500, reasoning=reasoning)
+            resp = chat(model, [{"role": "user", "content": identify_prompt(prog)}], gateway, max_tokens=max_tokens, reasoning=reasoning)
             finding = _compose_output(resp["choices"][0]["message"])
         except Exception as e:
             results.append({"prog": name, "model_status": "gateway_error", "detail": str(e)})
@@ -131,7 +131,8 @@ def main():
     ap.add_argument("--models", nargs="+", required=True)
     ap.add_argument("--judge", default="deepseek-flash")
     ap.add_argument("--gateway", default="http://localhost:4000/v1")
-    ap.add_argument("--reasoning", choices=["low","medium","high"], default=None)
+    ap.add_argument("--reasoning", choices=["low","medium","high","minimal"], default=None)
+    ap.add_argument("--max-tokens", type=int, default=1500)
     ap.add_argument("--max-samples", type=int, default=None)
     ap.add_argument("--save", default="results/quixbugs-identify.json")
     args = ap.parse_args()
@@ -141,7 +142,7 @@ def main():
     allout = {}
     for model in args.models:
         st = time.time()
-        res = grade_identification(model, programs, args.gateway, args.judge, args.max_samples, reasoning=args.reasoning)
+        res = grade_identification(model, programs, args.gateway, args.judge, args.max_samples, reasoning=args.reasoning, max_tokens=args.max_tokens)
         rc = sum(1 for r in res if r.get("correct") is True)
         n = len(res)
         wrong = sum(1 for r in res if r.get("correct") is False)

@@ -1,0 +1,193 @@
+{
+  "qwen-3.8:27b-medium": {
+    "results": [
+      {
+        "prog": "bucketsort",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE\nWe need answer user's request. Need review Python function for bugs. They show:\n\ndef bucketsort(arr, k):\n    counts = [0] * k\n    for x in arr:\n        counts[x] += 1\n\n    sorted_arr = []\n    for i, count in enumerate(counts):\n        sorted_arr.extend([i] * count)\n\n    return sorted_arr\n\nAnd a commented-out alternative? They included \"\"\"\ndef bucketsort... enumerate(arr) ... counts[i]\n\"\"\" maybe just a commented block. Need determine if function has bug. Need consider assumptions: bucket",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model reported NO ISSUE and did not claim any bug exists. The active function correctly implements counting/bucket sort under the assumption th"
+      },
+      {
+        "prog": "find_in_sorted",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "We need answer user: review Python function for bugs. We need analyze thoroughly.\n\nFunction:\ndef find_in_sorted(arr, x):\n    def binsearch(start, end):\n        if start == end:\n            return -1\n        mid = start + (end - start) // 2\n        if x < arr[mid]:\n            return binsearch(start, mid)\n        elif x > arr[mid]:\n            return binsearch(mid + 1, end)\n        else:\n            return mid\n\n    return binsearch(0, len(arr))\n\nGoal find in sorted arr index or -1. This is typica",
+        "judge": "{\n  \"claimed_bug\": false,\n  \"real_bug\": false,\n  \"reason\": \"The model did not claim a bug; it analyzed the code and concluded there are no issues, which is correct. The binary search implementation is"
+      },
+      {
+        "prog": "gcd",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE\nWe need answer user's request: review Python function for bugs.\nFunction:\ndef gcd(a, b):\n    if b == 0:\n        return a\n    else:\n        return gcd(b, a % b)\n\nNeed if no bug reply exactly NO ISSUE. If bug describe. We need confident bugs.\nThis is standard Euclidean algorithm. Potential issues: doesn't handle negative numbers? Usually gcd can be defined for integers, negative? If a negative and b positive, a % b in Python yields nonnegative remainder, recursion terminates, result nonne",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model correctly stated NO ISSUE for the standard recursive Euclidean algorithm. The function is correct for non-negative integers, which is the"
+      },
+      {
+        "prog": "get_factors",
+        "claimed": true,
+        "real": false,
+        "fp": true,
+        "finding": "We need answer user: review Python function for bugs. Need output either NO ISSUE or describe bugs precisely. Need think thoroughly.\n\nFunction:\n\ndef get_factors(n):\n    if n == 1:\n        return []\n\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0:\n            return [i] + get_factors(n // i)\n\n    return [n]\n\n\"\"\"\ndef get_factors(n):\n    if n == 1:\n        return []\n\n    for i in range(2, n + 1):\n        if n % i == 0:\n            return [i] + get_factors(n // i)\n\n    return []\n\"\"\"",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": false, \"reason\": \"The model suggests a potential bug from floating-point sqrt imprecision, but this is not a concrete bug for the function's intended use and for typi"
+      },
+      {
+        "prog": "is_valid_parenthesization",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE\nWe need answer user's request. Need review Python function for bugs. They show code:\n\n```python\n\ndef is_valid_parenthesization(parens):\n    depth = 0\n    for paren in parens:\n        if paren == '(':\n            depth += 1\n        else:\n            depth -= 1\n            if depth < 0:\n                return False\n\n    return depth == 0\n\n\"\"\"\ndef is_valid_parenthesization(parens):\n... many duplicate versions in a triple-quoted string?\n\"\"\"\n\n```\n\nWe need determine if function has bug. The a",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model correctly identified the active function as having no bug; the triple-quoted string after it is not executed and only contains redundant "
+      },
+      {
+        "prog": "kth",
+        "claimed": true,
+        "real": false,
+        "fp": true,
+        "finding": "We need answer user: review Python function for bugs. Need produce final. Let's analyze thoroughly.\n\nFunction:\ndef kth(arr, k):\n    pivot = arr[0]\n    below = [x for x in arr if x < pivot]\n    above = [x for x in arr if x > pivot]\n\n    num_less = len(below)\n    num_lessoreq = len(arr) - len(above)\n\n    if k < num_less:\n        return kth(below, k)\n    elif k >= num_lessoreq:\n        return kth(above, k - num_lessoreq)\n    else:\n        return pivot\n\nNeed identify bugs. This is selection for k-th",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": false, \"reason\": \"The model did not explicitly assert a definite bug; it analyzed potential issues and concluded the function is correct for zero-based k. The reply e"
+      },
+      {
+        "prog": "lcs_length",
+        "claimed": true,
+        "real": true,
+        "fp": false,
+        "finding": "We need answer user asks review Python function for bugs. Need analyze carefully. Function:\n\ndef lcs_length(s, t):\n    from collections import Counter\n    dp = Counter()\n    for i in range(len(s)):\n        for j in range(len(t)):\n            if s[i] == t[j]:\n                dp[i, j] = dp[i - 1, j - 1] + 1\n    return max(dp.values()) if dp else 0\n\nNeed decide if bug. It attempts LCS length? Standard DP: if chars match dp[i][j]=dp[i-1][j-1]+1 else dp[i][j]=max(dp[i-1][j], dp[i][j-1]). This sparse ",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": true, \"reason\": \"The model correctly identifies a bug: the function is named lcs_length, which conventionally means Longest Common Subsequence, but the implementation"
+      },
+      {
+        "prog": "lis",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "We need answer user's request. Need review Python function for bugs. Need determine if bug exists. Function lis computes length of longest increasing subsequence? It uses ends dict mapping length -> index of smallest possible ending? Let's analyze carefully.\n\nCode:\ndef lis(arr):\n    ends = {}\n    longest = 0\n\n    for i, val in enumerate(arr):\n\n        prefix_lengths = [j for j in range(1, longest + 1) if arr[ends[j]] < val]\n\n        length = max(prefix_lengths) if prefix_lengths else 0\n\n        ",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model's reply is cut off mid-sentence and does not actually assert a bug. It explores the algorithm, tests several examples, and notes potentia"
+      },
+      {
+        "prog": "longest_common_subsequence",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "We need answer user's request. Need review Python function for bugs. Need decide if bug. Function:\ndef longest_common_subsequence(a, b):\n    if not a or not b:\n        return ''\n    elif a[0] == b[0]:\n        return a[0] + longest_common_subsequence(a[1:], b[1:])\n    else:\n        return max(\n            longest_common_subsequence(a, b[1:]),\n            longest_common_subsequence(a[1:], b),\n            key=len\n        )\n\nNeed identify bugs. This is recursive LCS returning one LCS string. Base if",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model concluded there is no bug (claimed_bug=false). The recursive LCS implementation is logically correct and returns a valid longest common s"
+      },
+      {
+        "prog": "max_sublist_sum",
+        "claimed": true,
+        "real": false,
+        "fp": true,
+        "finding": "We need answer user's request. Need review Python function for bugs. Need produce final answer. Need analyze carefully.\n\nFunction:\ndef max_sublist_sum(arr):\n    max_ending_here = 0\n    max_so_far = 0\n\n    for x in arr:\n        max_ending_here = max(0, max_ending_here + x)\n        max_so_far = max(max_so_far, max_ending_here)\n\n    return max_so_far\n\nNeed determine if bug. Depends expected semantics: maximum sublist sum? Usually maximum subarray sum. The standard Kadane with max(0, ... ) and max_s",
+        "judge": "{\n  \"claimed_bug\": true,\n  \"real_bug\": false,\n  \"reason\": \"The function correctly computes the maximum sublist sum when empty sublists are allowed (as commonly used in Kadane's algorithm), and returns"
+      },
+      {
+        "prog": "mergesort",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "We need answer user asks review Python function for bugs. Need output exactly NO ISSUE if no bug, else describe each bug precisely. Need analyze code.\n\nCode:\ndef mergesort(arr):\n    def merge(left, right):\n        result = []\n        i = 0\n        j = 0\n        while i < len(left) and j < len(right):\n            if left[i] <= right[j]:\n                result.append(left[i])\n                i += 1\n            else:\n                result.append(right[j])\n                j += 1\n        result.exte",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model correctly reported NO ISSUE. The function implementation is correct: the merge routine properly combines sorted lists using an idiomatic "
+      },
+      {
+        "prog": "next_palindrome",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "We need answer user: review Python function for bugs. Need analyze code carefully. Need decide if bug exists. Let's understand intended function? It takes digit_list likely representing a palindrome? Need next palindrome? We need identify bugs confidently. Let's parse code:\n\ndef next_palindrome(digit_list):\n    high_mid = len(digit_list) // 2\n    low_mid = (len(digit_list) - 1) // 2\n    while high_mid < len(digit_list) and low_mid >= 0:\n        if digit_list[high_mid] == 9:\n            digit_lis",
+        "judge": "{\n  \"claimed_bug\": false,\n  \"real_bug\": false,\n  \"reason\": \"The model did not report a bug; it analyzed the function and concluded the algorithm works correctly for palindromic inputs and found no act"
+      },
+      {
+        "prog": "next_permutation",
+        "claimed": true,
+        "real": false,
+        "fp": true,
+        "finding": "We need answer user: review Python function for bugs. Need output either NO ISSUE or describe bugs. We need analyze code carefully.\n\nUser provided:\n```python\n\ndef next_permutation(perm):\n    for i in range(len(perm) - 2, -1, -1):\n        if perm[i] < perm[i + 1]:\n            for j in range(len(perm) - 1, i, -1):\n                if perm[i] < perm[j]:\n                    next_perm = list(perm)\n                    next_perm[i], next_perm[j] = perm[j], perm[i]\n                    next_perm[i + 1:] =",
+        "judge": "{\n  \"claimed_bug\": true,\n  \"real_bug\": false,\n  \"reason\": \"The model's reply is mostly analysis and ultimately does not assert a definite bug; it discusses potential issues but concludes no clear bug "
+      },
+      {
+        "prog": "pascal",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "We need answer user asks review Python function for bugs. Need analyze carefully.\n\nFunction:\ndef pascal(n):\n    rows = [[1]]\n    for r in range(1, n):\n        row = []\n        for c in range(0, r + 1):\n            upleft = rows[r - 1][c - 1] if c > 0 else 0\n            upright = rows[r - 1][c] if c < r else 0\n            row.append(upleft + upright)\n        rows.append(row)\n\n    return rows\n\nNeed detect bugs. It generates Pascal's triangle rows for n? Usually pascal(n) returns n rows, row 0 has ",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model concluded there is no bug and did not claim any issue with the function. The function correctly generates Pascal's triangle for positive "
+      },
+      {
+        "prog": "possible_change",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "We need answer user's request. Need review Python function for bugs. They provide active function:\n\ndef possible_change(coins, total):\n    if total == 0:\n        return 1\n    if total < 0 or not coins:\n        return 0\n\n    first, *rest = coins\n    return possible_change(coins, total - first) + possible_change(rest, total)\n\nThen a docstring with multiple alternate definitions. The instruction: Review following Python function for bugs. If no bug reply exactly NO ISSUE. If bug describe each preci",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": false, \"reason\": \"The model did not explicitly assert any bug; it said 'NO ISSUE' is needed if no bug, and its analysis concluded the function is correct. The final v"
+      },
+      {
+        "prog": "powerset",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE\nWe need answer user asks review Python function for bugs. Need produce final. Need analyze.\n\nFunction:\ndef powerset(arr):\n    if arr:\n        first, *rest = arr\n        rest_subsets = powerset(rest)\n        return rest_subsets + [[first] + subset for subset in rest_subsets]\n    else:\n        return [[]]\n\nCommented alternative: return [[first] + subset for subset in rest_subsets] + rest_subsets\n\nNeed determine bugs. Powerset (subsets) of a sequence? Usually returns list of lists. If arr ",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model stated 'NO ISSUE' and correctly analyzed the function, finding no bug. The function correctly generates all subsets (powerset) recursivel"
+      },
+      {
+        "prog": "quicksort",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "We need answer user: Review Python function for bugs. Function:\n\ndef quicksort(arr):\n    if not arr:\n        return []\n\n    pivot = arr[0]\n    lesser = quicksort([x for x in arr[1:] if x < pivot])\n    greater = quicksort([x for x in arr[1:] if x >= pivot])\n    return lesser + [pivot] + greater\n\n\"\"\"\ndef quicksort(arr):\n... alternate with <= and >\n\"\"\"\n\nNeed if no bug reply exactly NO ISSUE. If bug describe. We need only confident bugs. Need analyze correctness. This quicksort with pivot first, les",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model correctly found no bugs and essentially responded with NO ISSUE analysis. The quicksort variant works correctly.\"}"
+      },
+      {
+        "prog": "rpn_eval",
+        "claimed": true,
+        "real": true,
+        "fp": false,
+        "finding": "We need answer user asks review Python function for bugs. Need analyze thoroughly. Function:\n\ndef rpn_eval(tokens):\n    def op(symbol, a, b):\n        return {\n            '+': lambda a, b: a + b,\n            '-': lambda a, b: a - b,\n            '*': lambda a, b: a * b,\n            '/': lambda a, b: a / b\n        }[symbol](a, b)\n\n    stack = []\n\n    for token in tokens:\n        if isinstance(token, float):\n            stack.append(token)\n        else:\n            a = stack.pop()\n            b = s",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": true, \"reason\": \"The model claims there is a bug, specifically that isinstance(token, float) does not recognize integers, causing integer tokens to be treated as oper"
+      },
+      {
+        "prog": "shunting_yard",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "We need answer user's request: review Python function for bugs. Need decide if bug exists. Function shunting_yard(tokens). Input tokens presumably ints and operators + - * /. It implements Dijkstra shunting-yard for infix to RPN assuming left-associative binary operators, no parentheses, no functions, no unary. Code:\nprecedence dict.\nrpntokens = []\nopstack = []\nfor token in tokens:\n    if isinstance(token, int):\n        rpntokens.append(token)\n    else:\n        while opstack and precedence[token",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model concluded there is no bug after thorough analysis, and the implementation correctly handles left-associative binary operators without par"
+      },
+      {
+        "prog": "sieve",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE\nWe need answer user asks review Python function for bugs. Need produce final. Need analyze.\n\nFunction:\ndef sieve(max):\n    primes = []\n    for n in range(2, max + 1):\n        if all(n % p > 0 for p in primes):\n            primes.append(n)\n    return primes\n\nPotential bugs? Shadowing built-in max? Not necessarily bug but style. Logic? It returns primes <= max. all over empty primes for n=2 -> True. n%p > 0 equivalent n not divisible by p for p < n. Since primes list only prior primes, fi",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model correctly concluded there is no bug in the function. The implementation correctly filters primes by checking divisibility against previou"
+      },
+      {
+        "prog": "subsequences",
+        "claimed": true,
+        "real": true,
+        "fp": false,
+        "finding": "We need answer user's request. Need review Python function for bugs. Need produce final. Need analyze.\n\nFunction:\ndef subsequences(a, b, k):\n    if k == 0:\n        return [[]]\n\n    ret = []\n    for i in range(a, b + 1 - k):\n        ret.extend(\n            [i] + rest for rest in subsequences(i + 1, b, k - 1)\n        )\n\n    return ret\n\nWe need identify bugs. What is intended? Likely generate all subsequences/combinations of length k from integers a..b? Name subsequences(a,b,k). The loop range(a, b",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": true, \"reason\": \"The model correctly identifies an off-by-one error in the range stop: range(a, b + 1 - k) should be range(a, b - k + 2) to include all valid first el"
+      },
+      {
+        "prog": "to_base",
+        "claimed": true,
+        "real": true,
+        "fp": false,
+        "finding": "We need answer user asks review Python function for bugs. Need analyze. Code:\n\nimport string\ndef to_base(num, b):\n    result = ''\n    alphabet = string.digits + string.ascii_uppercase\n    while num > 0:\n        i = num % b\n        num = num // b\n        result = alphabet[i] + result\n    return result\n\nCommented alternative uses result = result + alphabet[i]; return result[::-1]. They likely want identify bugs. Need consider edge cases: num=0 returns '' instead of '0'. Also if num negative, while",
+        "judge": "{\"claimed_bug\": true, \"real_bug\": true, \"reason\": \"The model correctly identifies that the function incorrectly returns an empty string for num == 0 instead of '0'. This is a genuine bug in the given "
+      },
+      {
+        "prog": "wrap",
+        "claimed": true,
+        "real": true,
+        "fp": false,
+        "finding": "We need answer user: review Python function for bugs. Need produce final with either NO ISSUE or precise bugs. Need analyze deeply.\n\nFunction:\n\ndef wrap(text, cols):\n    lines = []\n    while len(text) > cols:\n        end = text.rfind(' ', 0, cols + 1)\n        if end == -1:\n            end = cols\n        line, text = text[:end], text[end:]\n        lines.append(line)\n\n    lines.append(text)\n    return lines\n\nNeed find bugs confident.\n\nLet's reason. It's a simple text wrap? Goal maybe wrap at cols ",
+        "judge": "{\n  \"claimed_bug\": true,\n  \"real_bug\": true,\n  \"reason\": \"The model identifies a genuine infinite-loop bug: after splitting at a space, the next chunk begins with a space. If that chunk is still longe"
+      }
+    ],
+    "fp": 4,
+    "n": 23,
+    "noissue_clean": 19
+  }
+}

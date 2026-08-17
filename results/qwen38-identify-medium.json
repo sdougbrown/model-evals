@@ -1,0 +1,170 @@
+{
+  "qwen-3.8:27b": {
+    "results": [
+      {
+        "prog": "bucketsort",
+        "finding": "\nWe need answer user's request. Need identify bug. Need no code-block requirement? They say prose, no code-block requirement. Could include code inline? Probably okay but maybe avoid code blocks. Need exact line/expression wrong, why, correct.\n\nFunction:\ndef bucketsort(arr, k):\n    counts = [0] * k\n    for x in arr:\n        counts[x] += 1\n\n    sorted_arr = []\n    for i, count in enumerate(arr):\n        sorted_arr.extend([i] * count)\n\n    return sorted_arr\n\nBug: for i, count in enumerate(arr) should enumerate(counts). For empty arr, k=14: counts [0]*14, second loop enumerate(arr) -> no loop, so",
+        "judge": "{\"correct\": true, \"reason\": \"The finding correctly identifies that the code iterates over `arr` instead of `counts` in the second loop, which is the exact bug fixed in the corrected source.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "find_in_sorted",
+        "finding": "\nWe need answer user's request. Need identify bug in Python binary search. Need state exact line/expression wrong, why, correct expression/line. Let's analyze carefully.\n\nFunction:\ndef find_in_sorted(arr, x):\n    def binsearch(start, end):\n        if start == end:\n            return -1\n        mid = start + (end - start) // 2\n        if x < arr[mid]:\n            return binsearch(start, mid)\n        elif x > arr[mid]:\n            return binsearch(mid, end)\n        else:\n            return mid\n    return binsearch(0, len(arr))\n\nThis is half-open interval [start,end). If start==end empty. mid = f",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the erroneous right-branch recursion `binsearch(mid, end)` instead of `binsearch(mid + 1, end)`, which is the same defect corrected in the fixed version. It also correctly explains why this causes infinite recursion, though it notes the specific ex",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "gcd",
+        "finding": "\n\n1. The wrong line is:\n\n`return gcd(a % b, b)`\n\n2. It is wrong because the recursive arguments are swapped. For `gcd(3, 12)`, `a % b` is `3`, so it calls `gcd(3, 12)` again forever, causing infinite recursion.\n\n3. It should be:\n\n`return gcd(b, a % b)`\nWe need answer user. Need identify bug in Python function. Let's analyze. Function:\ndef gcd(a, b):\n    if b == 0:\n        return a\n    else:\n        return gcd(a % b, b)\n\nThey say concrete failing f(3,12) expected 3 actual exception. Let's see standard Euclid requires gcd(a,b)=gcd(b, a%b). Here call gcd(a % b, b) => arguments swapped? Let's simu",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the exact wrong recursive call `gcd(a % b, b)` and correctly explains that swapping the arguments to `gcd(b, a % b)` fixes the bug, which matches the intended fix.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "get_factors",
+        "finding": "\nWe need answer user's request. Need analyze problem. User says Python function:\n\ndef get_factors(n):\n    if n == 1:\n        return []\n\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0:\n            return [i] + get_factors(n // i)\n\n    return []\n\nDocstring examples: get_factors(101) should [101]. Concrete failing case: f(1) expected [] actual <exception>. They ask identify subtle bug: exact line/expression wrong, why, correct expression/line.\n\nNeed inspect. The function as written: if n==1 return [], then for range, if factor return [i]+..., return [] after loop. For n=1 returns",
+        "judge": "{\"correct\": false, \"reason\": \"The buggy function returns [] for primes (e.g., get_factors(101)), where the correct fix is return [n]. The reviewer's cited failing case f(1) expecting [] but getting an exception is impossible with the shown code\u2014it returns [] for n=1 without exception. Thus the revie",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "is_valid_parenthesization",
+        "finding": "\nWe need answer user. Need identify bug. They say function has subtle bug produces wrong result for some inputs. Concrete failing case: f('((') expected False actual <exception>. Wait provided code returns True if depth ends 0? Let's inspect:\n\ndef is_valid_parenthesization(parens):\n    depth = 0\n    for paren in parens:\n        if paren == '(':\n            depth += 1\n        else:\n            depth -= 1\n            if depth < 0:\n                return False\n\n    return True\n\nFor '((' loop depth 2, return True, not exception. But user says actual <exception>. Hmm maybe the bug is missing check ",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the final return should verify depth == 0, matching the intended fix, and correctly notes that unmatched opening parentheses are mishandled. The mention of an exception is a minor wording discrepancy since the shown code would return True instead o",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "kth",
+        "finding": "\nWe need answer user: identify bug in Python function kth. Need reason. Let's analyze thoroughly.\n\nFunction:\ndef kth(arr, k):\n    pivot = arr[0]\n    below = [x for x in arr if x < pivot]\n    above = [x for x in arr if x > pivot]\n\n    num_less = len(below)\n    num_lessoreq = len(arr) - len(above)\n\n    if k < num_less:\n        return kth(below, k)\n    elif k >= num_lessoreq:\n        return kth(above, k)\n    else:\n        return pivot\n\nIntended QuickSelect find kth lowest 0-based. It partitions strictly less, greater, pivot. num_less = # elements < pivot. num_lessoreq = # elements <= pivot = len(",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the recursive call on 'above' passing k instead of k - num_lessoreq, which is the intended fix in the corrected source.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "lcs_length",
+        "finding": "\nWe need answer user. Need identify bug in Python function. Need produce final prose precise concise. Let's analyze thoroughly.\n\nFunction:\ndef lcs_length(s, t):\n    from collections import Counter\n    dp = Counter()\n    for i in range(len(s)):\n        for j in range(len(t)):\n            if s[i] == t[j]:\n                dp[i, j] = dp[i - 1, j] + 1\n    return max(dp.values()) if dp else 0\n\nDoc says Longest Common Substring. Example witch/sandwich -> 2 (itch? Actually 'itch' in sandwich? witch and sandwich: common substrings? witch: 'itch', 'itc', 'it', 'ic', 'tc', 'wt'? sandwich has 'itch'? sand",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer identifies the recurrence bug: for longest common substring, when characters match the value should come from dp[i-1][j-1], not dp[i-1][j]. This matches the corrected line.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "lis",
+        "finding": "\nWe need answer user. Need analyze bug. Function:\n\ndef lis(arr):\n    ends = {}\n    longest = 0\n\n    for i, val in enumerate(arr):\n\n        prefix_lengths = [j for j in range(1, longest + 1) if arr[ends[j]] < val]\n\n        length = max(prefix_lengths) if prefix_lengths else 0\n\n        if length == longest or val < arr[ends[length + 1]]:\n            ends[length + 1] = i\n            longest = length + 1\n\n    return longest\n\nInput precondition unique ints. For empty arr, loop not run, return longest 0. But user says concrete failing f([]) expected 0 actual <exception>. Wait in code as shown no exc",
+        "judge": "{\"correct\": false, \"reason\": \"The reviewer did not identify the actual bug in the function. The bug is that `longest` should be updated with `max(longest, length+1)` instead of unconditionally setting `longest = length+1`, which can incorrectly lower `longest` when replacing an existing tail length.",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "longest_common_subsequence",
+        "finding": "\nWe need answer user asks identify bug in Python function. Need reason. done. Need final prose concise. Need analyze function.\n\nFunction:\ndef longest_common_subsequence(a, b):\n    if not a or not b:\n        return ''\n\n    elif a[0] == b[0]:\n        return a[0] + longest_common_subsequence(a[1:], b)\n\n    else:\n        return max(\n            longest_common_subsequence(a, b[1:]),\n            longest_common_subsequence(a[1:], b),\n            key=len\n        )\n\nBug? Concrete failing case f('ABCD', 'XBCYDQ') expected BCD actual <exception>. Exception likely RecursionError? Let's trace. It seems in ",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer identifies that the matching branch incorrectly recurses on (a[1:], b) instead of (a[1:], b[1:]), which is exactly the bug fixed in the correct source.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "max_sublist_sum",
+        "finding": "\nWe need answer user's request. Need identify bug. User says Python function has subtle bug, concrete failing case f([3,4,5]) expected 12 actual <exception>. Wait given code? Let's examine.\n\ndef max_sublist_sum(arr):\n    max_ending_here = 0\n    max_so_far = 0\n\n    for x in arr:\n        max_ending_here = max_ending_here + x\n        max_so_far = max(max_so_far, max_ending_here)\n\n    return max_so_far\n\nThis is Kadane variant that doesn't reset max_ending_here to max(0, max_ending_here+x). For all positives [3,4,5], works? Let's trace: m_e=0,m_f=0; x=3 =>3, m_f=3; x=4=>7, m_f=7; x=5=>12, m_f=12. N",
+        "judge": "{\"correct\": false, \"reason\": \"The finding does not pinpoint a real exception for [3,4,5]; the code runs without exception there. The root bug is the missing reset of max_ending_here to max(0,...), but that is not tied to an exception, and the finding is confused about the failure case.\"}",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "mergesort",
+        "finding": "\nWe need answer user asks identify bug. Need analyze. Function:\ndef mergesort(arr):\n    def merge(left, right):\n        result=[]; i=0; j=0\n        while i < len(left) and j < len(right):\n...\n        result.extend(left[i:] or right[j:])\n        return result\n\nif len(arr)==0: return arr else: middle... left=mergesort... right=... return merge...\n\nFailing case f([]) expected [] actual exception. But code seems len(arr)==0 returns arr, no exception for empty unless input not list? Maybe actual exception maybe from wrong indentation? Let's examine: In code, after function mergesort, there is tripl",
+        "judge": "{\"correct\": false, \"reason\": \"The reviewer's finding fails to definitively identify the real bug (the missing base case for length 1). It discusses the merge logic and speculates about the empty-list case without pinpointing that a list of length 1 causes infinite recursion.\"}",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "next_palindrome",
+        "finding": "\nWe need answer user's request. Need identify bug in Python function. Let's analyze thoroughly.\n\nFunction:\ndef next_palindrome(digit_list):\n    high_mid = len(digit_list) // 2\n    low_mid = (len(digit_list) - 1) // 2\n    while high_mid < len(digit_list) and low_mid >= 0:\n        if digit_list[high_mid] == 9:\n            digit_list[high_mid] = 0\n            digit_list[low_mid] = 0\n            high_mid += 1\n            low_mid -= 1\n        else:\n            digit_list[high_mid] += 1\n            if low_mid != high_mid:\n                digit_list[low_mid] += 1\n            return digit_list\n    ret",
+        "judge": "{\"correct\": false, \"reason\": \"The reviewer's explanation is cut off and contains no definitive statement identifying a specific bug. It mostly narrates manual tracing and even notes no exception for [1,3,1], so it fails to pinpoint the actual defect fixed by the changed line (the `(len(digit_list) -",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "next_permutation",
+        "finding": "\nWe need answer user's request. Need identify bug in Python next_permutation. Function:\n\ndef next_permutation(perm):\n    for i in range(len(perm) - 2, -1, -1):\n        if perm[i] < perm[i + 1]:\n            for j in range(len(perm) - 1, i, -1):\n                if perm[j] < perm[i]:\n                    next_perm = list(perm)\n                    next_perm[i], next_perm[j] = perm[j], perm[i]\n                    next_perm[i + 1:] = reversed(next_perm[i + 1:])\n                    return next_perm\n\nInput [3,4,5]. Expected [3,5,4], actual exception. Why? Let's simulate. len=3. i from 1 to 0. i=1: perm",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the same root-cause bug: the inner condition uses `perm[j] < perm[i]` instead of `perm[j] > perm[i]`, which causes the algorithm to fail for valid inputs like [3,4,5].\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "pascal",
+        "finding": "\nWe need answer user's request. Need analyze bug.\n\nFunction:\ndef pascal(n):\n    rows = [[1]]\n    for r in range(1, n):\n        row = []\n        for c in range(0, r):\n            upleft = rows[r - 1][c - 1] if c > 0 else 0\n            upright = rows[r - 1][c] if c < r else 0\n            row.append(upleft + upright)\n        rows.append(row)\n    return rows\n\nFor n=1, range(1,1) empty returns [[1]]? Wait actual says exception. Why exception for f(1)? In given code, pascal(1) returns [[1]] no exception. But concrete failing case says actual <exception>. Hmm maybe due to docstring? Or maybe actual c",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the core defect: the inner loop range should be range(0, r+1), not range(0, r). This matches the fix in the corrected source, which changes that line. Although the concern about n=1 is slightly off, the key bug pinpointed is correct.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "possible_change",
+        "finding": "\nWe need answer user asks identify bug in Python function. Need prose, no code-block requirement? They say prose, no code-block requirement. Need state exact line/expression wrong, why, correct expression/line. We need analyze.\n\nFunction:\ndef possible_change(coins, total):\n    if total == 0: return 1\n    if total < 0: return 0\n    first, *rest = coins\n    return possible_change(coins, total - first) + possible_change(rest, total)\n\nConcrete failing: f([1,4,2], -7) expected 0 actual exception. Wait with total=-7, initial if total ==0 false, if total <0 return 0, should not exception. But actual ",
+        "judge": "{\"correct\": false, \"reason\": \"The finding is a confused, incomplete critique. The actual bug in the buggy source is the missing `not coins` / empty-coins base case, which causes an unpacking exception whenever `rest` becomes empty with positive remaining total. The finding fails to identify that roo",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "powerset",
+        "finding": "\nWe need answer user's request. Need analyze bug. Function:\ndef powerset(arr):\n    if arr:\n        first, *rest = arr #python3 just like car and cdr (in this case anyway..)\n        rest_subsets = powerset(rest)\n        return [[first] + subset for subset in rest_subsets]\n    else:\n        return [[]]\n\nFailing f([]) expected [[]] actual exception. But code as given: if arr: for [] false, return [[]], no exception. Why exception? Wait maybe because concrete failing case f([]) expected [[]] actual <exception>. There must be a subtle bug? Let's inspect. The function as written should return [[]] f",
+        "judge": "{\"correct\": false, \"reason\": \"The finding fails to identify that the function omits subsets without the first element; instead it fixates on a claimed exception. The actual bug is the missing `rest_subsets` in the return expression, which the correction addresses.\"}",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "quicksort",
+        "finding": "\nWe need answer user. Need analyze bug. Function:\ndef quicksort(arr):\n    if not arr:\n        return []\n\n    pivot = arr[0]\n    lesser = quicksort([x for x in arr[1:] if x < pivot])\n    greater = quicksort([x for x in arr[1:] if x > pivot])\n    return lesser + [pivot] + greater\n\nFailing case [5,4,3,2,1] expected sorted actual exception. Let's inspect: For distinct ints, this recursive quicksort seems fine? Base empty. For [5,4,3,2,1], pivot 5, lesser sort [4,3,2,1], greater empty. Recursion depth 5 okay. It should produce [1,2,3,4,5]. No exception? Let's simulate: quicksort([4,3,2,1]) pivot 4,",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer identifies the strict < and > comparisons excluding duplicate equal-to-pivot elements, which is exactly the bug fixed by changing > to >= (or < to <=). The concrete failing case mismatch is noted but the root-cause defect is correctly pinpointed.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "rpn_eval",
+        "finding": "\nWe need answer user's request. Need identify bug in Python function. Let's analyze thoroughly.\n\nFunction rpn_eval(tokens):\n    def op(symbol, a, b):\n        return {\n            '+': lambda a, b: a + b,\n            '-': lambda a, b: a - b,\n            '*': lambda a, b: a * b,\n            '/': lambda a, b: a / b\n        }[symbol](a, b)\n\n    stack = []\n    for token in tokens:\n        if isinstance(token, float):\n            stack.append(token)\n        else:\n            a = stack.pop()\n            b = stack.pop()\n            stack.append(\n                op(token, a, b)\n            )\n    return",
+        "judge": "{\"correct\": false, \"reason\": \"The reviewer's finding concludes there is no exception for [2.0,2.0,'+'] and focuses on operand-order issues, but it does not pinpoint the actual intended bug. The correct fix is about operand order for non-commutative operators, which the reviewer mentions but ultimate",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "shunting_yard",
+        "finding": "\nWe need answer user's request. Need identify bug in Python shunting_yard. Let's analyze code.\n\nFunction:\ndef shunting_yard(tokens):\n    precedence = {'+':1,'-':1,'*':2,'/':2}\n    rpntokens=[]; opstack=[]\n    for token in tokens:\n        if isinstance(token, int):\n            rpntokens.append(token)\n        else:\n            while opstack and precedence[token] <= precedence[opstack[-1]]:\n                rpntokens.append(opstack.pop())\n\n    while opstack:\n        rpntokens.append(opstack.pop())\n    return rpntokens\n\nMissing: when token is operator, after popping higher/equal precedence, need op",
+        "judge": "{\"correct\": false, \"reason\": \"The finding identifies the missing `opstack.append(token)` as the bug, which is correct, but it goes off-track speculating about an `f([])` exception and fails to clearly and confidently state the actual defect. It acknowledges the code returns [] for empty input and ne",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "sieve",
+        "finding": "\nWe need answer user's request. Need identify bug in Python function:\n\ndef sieve(max):\n    primes = []\n    for n in range(2, max + 1):\n        if any(n % p > 0 for p in primes):\n            primes.append(n)\n    return primes\n\nInput positive int upper bound. Concrete failing: f(1) expected [] actual exception. But wait range(2, 2) for max=1? max+1 =2, range(2,2) empty no exception. But actual says exception. Maybe because function name? No. Could be because max is built-in? No. Hmm concrete failing case f(1) exception? Let's inspect: In Python, def sieve(max): ... for n in range(2, max + 1): if",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer correctly identifies that `any(n % p > 0 for p in primes)` is the buggy expression and should be `all(n % p > 0 for p in primes)` (or equivalent), which matches the fix in the correct source. The discussion about f(1) exception is an inconsistency, but the c",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "subsequences",
+        "finding": "\nWe need answer user's request. Need identify bug in Python function. We did. Now analyze deeply.\n\nFunction:\n\ndef subsequences(a, b, k):\n    if k == 0:\n        return []\n\n    ret = []\n    for i in range(a, b + 1 - k):\n        ret.extend(\n            [i] + rest for rest in subsequences(i + 1, b, k - 1)\n        )\n\n    return ret\n\nDoc: Output: list of all length-k ascending sequences of ints in range(a, b). Example: subsequences(1,5,3) -> [[1,2,3], [1,2,4], [1,3,4], [2,3,4]] Wait range(a,b) normally [1,4] if half-open. But example includes 4, not 5? Let's inspect: a=1 b=5 k=3 expected [[1,2,3],[1",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer identifies the base case bug: returning [] instead of [[]] prevents all sequences from being generated, which is the root cause the fix addresses.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "to_base",
+        "finding": "\nWe need answer user: identify bug in Python function. We need analyze bug.\n\nFunction:\nimport string\ndef to_base(num, b):\n    result = ''\n    alphabet = string.digits + string.ascii_uppercase\n    while num > 0:\n        i = num % b\n        num = num // b\n        result = result + alphabet[i]\n    return result\n\nExpected base conversion. Bug: result built with least significant digit first; should prepend, i.e. result = alphabet[i] + result. For f(16,19): num=16, b=19, i=16, num=0, result='G' (actually works? Wait if num positive and one digit, result correct 'G'. User says actual <exception>. Le",
+        "judge": "{\"correct\": true, \"reason\": \"The finding identifies the correct root-cause bug: the result digits are appended in reverse order instead of prepended, exactly matching the fix in the corrected source. Even though the concrete failing case's exception detail is inconsistent, the expression-level defec",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "wrap",
+        "finding": "\nWe need answer user's request. Need analyze bug in Python wrap function. Need identify exact line/expression wrong, why, correct. Let's inspect.\n\nFunction:\ndef wrap(text, cols):\n    lines = []\n    while len(text) > cols:\n        end = text.rfind(' ', 0, cols + 1)\n        if end == -1:\n            end = cols\n        line, text = text[:end], text[end:]\n        lines.append(line)\n\n    return lines\n\nNeed wrap on spaces, preserve original amount spaces, spaces at start/end of each line aren't trimmed. Concatenation of strings returns original text.\n\nIf text length > cols. We want find a space to b",
+        "judge": "{\"correct\": false, \"reason\": \"The reviewer's finding is cut off and too vague/incomplete to clearly identify the actual fixed bug. It rambles through analysis but does not definitively state the root-cause defect that the fix addresses (missing `lines.append(text)` after the loop), so it cannot be c",
+        "correct": false,
+        "kb": "wrong"
+      }
+    ],
+    "recall": 13,
+    "n": 23,
+    "seconds": 1488
+  }
+}

@@ -146,7 +146,7 @@ def summarize(model, out):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--judges", nargs="+", required=True)
-    ap.add_argument("--reasoning", choices=["low","medium","high","none","max","xhigh"], default=None)
+    ap.add_argument("--reasoning", choices=["low","medium","high","none","max","xhigh","minimal"], default=None)
     ap.add_argument("--gateway", default="http://localhost:4000/v1")
     ap.add_argument("--save", default="results/quixbugs-judge.json")
     args = ap.parse_args()

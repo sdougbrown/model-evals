@@ -1,0 +1,24 @@
+description: "CRUXEval-O: qwen-3.8:27b reasoning=minimal"
+evaluateOptions:
+  maxConcurrency: 3
+providers:
+  - id: openai:chat:qwen-3.8:27b
+    label: qwen-3.8 minimal
+    config:
+      apiBaseUrl: "http://sparky:4000/v1"
+      apiKey: none
+      model: qwen-3.8:27b
+      reasoning: minimal
+      max_tokens: 4096
+prompts:
+  - |
+    You are given a Python function. Determine what it returns when called with the provided input.
+
+    ```python
+    {{code}}
+    ```
+
+    What does `{{input}}` return?
+
+    Respond with ONLY the Python literal return value — for example: `42`, `'hello'`, `[1, 2, 3]`, `None`, `True`. No explanation, no code block, just the value.
+tests: file://tests.yaml
