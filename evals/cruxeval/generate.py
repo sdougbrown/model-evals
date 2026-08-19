@@ -50,8 +50,16 @@ def make_test(sample):
     #   - double-quote vs single-quote throughout (Python repr style)
     assertion_js = (
         "(() => {"
-        " let got = output.trim()"
-        "   .replace(/^```[\\w]*\\n?/m,'').replace(/\\n?```$/m,'').trim();"
+        " let got = output.trim();"
+        " let m0 = got.match(/<\|START_TEXT\|>([\s\S]*?)<\|END_TEXT\|>/);"
+        " if (m0) { got = m0[1]; }"
+        " else {"
+        "   got = got.replace(/<\|START_THINKING\|>/g,'')"
+        "     .replace(/<\|END_THINKING\|>/g,'')"
+        "     .replace(/<\|START_TEXT\|>/g,'')"
+        "     .replace(/<\|END_TEXT\|>/g,'').trim();"
+        " }"
+        " got = got.replace(/^```[\\w]*\\n?/m,'').replace(/\\n?```$/m,'').trim();"
         " const lines = got.split('\\n').map(l=>l.trim()).filter(Boolean);"
         " if (lines.length > 1) got = lines[lines.length-1];"
         " got = got.replace(/^`([^`]+)`$/,'$1').trim();"

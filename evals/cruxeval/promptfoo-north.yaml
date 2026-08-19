@@ -1,0 +1,35 @@
+# CRUXEval-O — North Mini Code (dspark spec decode gauntlet, 50-test tests.yaml, seed=42)
+# north-mini-code always thinks (reasoning block is always opened by the
+# chat template), so max_tokens is generous; the assertion takes the last
+# non-empty line of content, so think-block spillover is harmless.
+# Run with --max-concurrency N per config.
+description: "CRUXEval-O: north-mini-code (pass@1, 50 tests)"
+
+evaluateOptions:
+  maxConcurrency: 1
+  retryOnFailure:
+    attempts: 2
+    delayMilliseconds: 1000
+
+providers:
+  - id: openai:chat:north-mini-code
+    label: north-mini-code
+    config:
+      apiBaseUrl: "http://localhost:8087/v1"
+      apiKey: none
+      model: north-mini-code
+      max_tokens: 8192
+
+prompts:
+  - |
+    You are given a Python function. Determine what it returns when called with the provided input.
+
+    ```python
+    {{code}}
+    ```
+
+    What does `{{input}}` return?
+
+    Respond with ONLY the Python literal return value — for example: `42`, `'hello'`, `[1, 2, 3]`, `None`, `True`. No explanation, no code block, just the value.
+
+tests: file://tests.yaml
