@@ -1,6 +1,0 @@
-Loaded 23 KEEP programs (using CORRECT/bug-free sources)
-
-== nemotron ==  false positives: 5/23  (22%)
-
-=== FP RATE SUMMARY (lower = better) ===
-  nemotron                   5/23 = 22% falsely flagged

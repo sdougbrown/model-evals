@@ -1,7 +1,0 @@
-Loaded 23 KEEP programs for identification
-
-== qwen-3.8:27b ==
-  recall (correct/total) = 12/23   wrong=11  ambiguous/judge-err=0
-
-=== RECALL SUMMARY ===
-  qwen-3.8:27b               12/23

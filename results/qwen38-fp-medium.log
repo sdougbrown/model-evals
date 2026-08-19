@@ -1,6 +1,0 @@
-Loaded 23 KEEP programs (using CORRECT/bug-free sources)
-
-== qwen-3.8:27b-medium ==  false positives: 4/23  (17%)
-
-=== FP RATE SUMMARY (lower = better) ===
-  qwen-3.8:27b-medium        4/23 = 17% falsely flagged

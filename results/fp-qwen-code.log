@@ -1,6 +1,0 @@
-Loaded 23 KEEP programs (using CORRECT/bug-free sources)
-
-== qwen-code ==  false positives: 0/0  (0%)
-
-=== FP RATE SUMMARY (lower = better) ===
-  qwen-code                  0/0 = 0% falsely flagged

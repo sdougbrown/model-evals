@@ -1,0 +1,24 @@
+description: "CRUXEval-O: north-mini-code reasoning=medium"
+evaluateOptions:
+  maxConcurrency: 3
+providers:
+  - id: openai:chat:north-mini-code
+    label: north-mini-code medium
+    config:
+      apiBaseUrl: "http://sparky:4000/v1"
+      apiKey: none
+      model: north-mini-code
+      reasoning: medium
+      max_tokens: 4096
+prompts:
+  - |
+    You are given a Python function. Determine what it returns when called with the provided input.
+
+    ```python
+    {{code}}
+    ```
+
+    What does `{{input}}` return?
+
+    Respond with ONLY the Python literal return value — for example: `42`, `'hello'`, `[1, 2, 3]`, `None`, `True`. No explanation, no code block, just the value.
+tests: file://tests.yaml
