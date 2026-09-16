@@ -1,0 +1,28 @@
+# CRUXEval-O — ornith (thinking model, so generous max_tokens for CoT + value)
+description: "CRUXEval-O: ornith (pass@1)"
+
+evaluateOptions:
+  maxConcurrency: 1
+
+providers:
+  - id: openai:chat:ornith
+    label: ornith
+    config:
+      apiBaseUrl: "http://sparky:4000/v1"
+      apiKey: none
+      model: ornith
+      max_tokens: 8192
+
+prompts:
+  - |
+    You are given a Python function. Determine what it returns when called with the provided input.
+
+    ```python
+    {{code}}
+    ```
+
+    What does `{{input}}` return?
+
+    Respond with ONLY the Python literal return value — for example: `42`, `'hello'`, `[1, 2, 3]`, `None`, `True`. No explanation, no code block, just the value.
+
+tests: file://tests.yaml
