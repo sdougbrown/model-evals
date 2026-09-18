@@ -1,0 +1,174 @@
+{
+  "ornith": {
+    "results": [
+      {
+        "prog": "bucketsort",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 7,
+        "sample": ""
+      },
+      {
+        "prog": "find_in_sorted",
+        "status": "noexecute",
+        "passed": null,
+        "need": 7,
+        "sample": ""
+      },
+      {
+        "prog": "gcd",
+        "status": "fixed",
+        "passed": 6,
+        "need": 6,
+        "sample": "\n\n```python\ndef gcd(a, b):\n    if b == 0:\n        return a\n    else:\n        return gcd(b, a % b)\n```"
+      },
+      {
+        "prog": "get_factors",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 11,
+        "sample": ""
+      },
+      {
+        "prog": "is_valid_parenthesization",
+        "status": "notfixed",
+        "passed": 2,
+        "need": 3,
+        "sample": ""
+      },
+      {
+        "prog": "kth",
+        "status": "notfixed",
+        "passed": 3,
+        "need": 7,
+        "sample": ""
+      },
+      {
+        "prog": "lcs_length",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 9,
+        "sample": ""
+      },
+      {
+        "prog": "lis",
+        "status": "notfixed",
+        "passed": 8,
+        "need": 12,
+        "sample": ""
+      },
+      {
+        "prog": "longest_common_subsequence",
+        "status": "notfixed",
+        "passed": 6,
+        "need": 10,
+        "sample": ""
+      },
+      {
+        "prog": "max_sublist_sum",
+        "status": "fixed",
+        "passed": 6,
+        "need": 6,
+        "sample": ""
+      },
+      {
+        "prog": "mergesort",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 14,
+        "sample": ""
+      },
+      {
+        "prog": "next_palindrome",
+        "status": "notfixed",
+        "passed": 4,
+        "need": 5,
+        "sample": ""
+      },
+      {
+        "prog": "next_permutation",
+        "status": "fixed",
+        "passed": 8,
+        "need": 8,
+        "sample": "\n\n```python\n\ndef next_permutation(perm):\n    for i in range(len(perm) - 2, -1, -1):\n        if perm[i] < perm[i + 1]:\n            for j in range(len(perm) - 1, i, -1):\n                if perm[j] > perm[i]:\n                    next_perm = list(perm)\n                    next_perm[i], next_perm[j] = pe"
+      },
+      {
+        "prog": "pascal",
+        "status": "fixed",
+        "passed": 5,
+        "need": 5,
+        "sample": "\n\n```python\ndef pascal(n):\n    rows = [[1]]\n    for r in range(1, n):\n        row = []\n        for c in range(0, r + 1):\n            upleft = rows[r - 1][c - 1] if c > 0 else 0\n            upright = rows[r - 1][c] if c < r else 0\n            row.append(upleft + upright)\n        rows.append(row)\n\n   "
+      },
+      {
+        "prog": "possible_change",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 10,
+        "sample": ""
+      },
+      {
+        "prog": "powerset",
+        "status": "notfixed",
+        "passed": 1,
+        "need": 5,
+        "sample": ""
+      },
+      {
+        "prog": "quicksort",
+        "status": "notfixed",
+        "passed": 12,
+        "need": 13,
+        "sample": ""
+      },
+      {
+        "prog": "rpn_eval",
+        "status": "notfixed",
+        "passed": 3,
+        "need": 6,
+        "sample": ""
+      },
+      {
+        "prog": "shunting_yard",
+        "status": "notfixed",
+        "passed": 2,
+        "need": 6,
+        "sample": ""
+      },
+      {
+        "prog": "sieve",
+        "status": "fixed",
+        "passed": 6,
+        "need": 6,
+        "sample": "\n\n```python\ndef sieve(max):\n    primes = []\n    for n in range(2, max + 1):\n        if not any(n % p == 0 for p in primes):\n            primes.append(n)\n    return primes\n```"
+      },
+      {
+        "prog": "subsequences",
+        "status": "notfixed",
+        "passed": 2,
+        "need": 12,
+        "sample": ""
+      },
+      {
+        "prog": "to_base",
+        "status": "noexecute",
+        "passed": null,
+        "need": 10,
+        "sample": ""
+      },
+      {
+        "prog": "wrap",
+        "status": "notfixed",
+        "passed": 0,
+        "need": 5,
+        "sample": ""
+      }
+    ],
+    "summary": {
+      "model": "ornith",
+      "fixed": 5,
+      "part": 0,
+      "n": 23
+    },
+    "seconds": 1114
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "ornith": {
+    "results": [
+      {
+        "prog": "bucketsort",
+        "finding": "\nLet me analyze this bucket sort function.\n\nThe function:\n```python\ndef bucketsort(arr, k):\n    counts = [0] * k\n    for x in arr:\n        counts[x] += 1\n\n    sorted_arr = []\n    for i, count in enumerate(arr):\n        sorted_arr.extend([i] * count)\n\n    return sorted_arr\n```\n\nLet me trace through the logic.\n\nFirst part:\n- `counts = [0] * k` creates a list of k zeros.\n- For each x in arr, `counts[x] += 1` counts occurrences of each value.\n\nSecond part:\n- `sorted_arr = []`\n- `for i, count in enumerate(arr):` \u2014 here `i` is the index (0, 1, 2, ...) and `count` is the element value.\n- `sorted_arr.",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer correctly identifies that the second loop uses `enumerate(arr)` instead of iterating over the `counts` array, so `i` (index) and `count` (element value) are misused as the output value and repetition count. Their proposed fix (`for i in range(k): sorted_arr.",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "find_in_sorted",
+        "finding": "\nLet me analyze this binary search function.\n\nThe function is:\n```python\ndef find_in_sorted(arr, x):\n    def binsearch(start, end):\n        if start == end:\n            return -1\n        mid = start + (end - start) // 2\n        if x < arr[mid]:\n            return binsearch(start, mid)\n        elif x > arr[mid]:\n            return binsearch(mid, end)\n        else:\n            return mid\n\n    return binsearch(0, len(arr))\n```\n\nThe bug is in the initial call: `binsearch(0, len(arr))`.\n\nHere, `start = 0` and `end = len(arr) = 7`.\n\nThe array is `[3, 4, 5, 5, 5, 5, 6]`, indices 0-6.\n\nThe `mid` compu",
+        "judge": "{\"correct\": false, \"reason\": \"The actual fix changes the right-recursion bound from binsearch(mid, end) to binsearch(mid + 1, end) in the x > arr[mid] branch \u2014 the buggy version fails to exclude mid from the search range, causing infinite recursion (e.g., when start and end differ by 1 and x > arr[m",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "gcd",
+        "finding": "\n\nThe bug is in the recursive call:\n\n`return gcd(a % b, b)`\n\n**Why it's wrong:** The Euclidean algorithm relies on the identity gcd(a, b) = gcd(b, a mod b), where the *first* argument of the next call must be the *remainder* and the *second* argument must be the *original divisor*. This function instead keeps `b` in the second position and puts `a % b` in the first. When `a < b` (as in `gcd(3, 12)`), `a % b` equals `a` itself, so the call becomes `gcd(3, 12)` again \u2014 an infinite loop that raises `RecursionError`.\n\n**Correct expression:**\n\n`return gcd(b, a % b)`\n\nWith this fix, `gcd(3, 12)` bec",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer pinpoints the exact changed line: the recursive call `gcd(a % b, b)` should be `gcd(b, a % b)` due to swapped arguments in the Euclidean step. Their trace (gcd(3, 12) recursing infinitely since 3 % 12 = 3) correctly explains the defect and matches the fix.\"}",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "get_factors",
+        "finding": "\nLet me analyze this function carefully.\n\nThe function is supposed to return prime factors of n in sorted order with repetition.\n\nLet me trace through the logic.\n\n```python\ndef get_factors(n):\n    if n == 1:\n        return []\n\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0:\n            return [i] + get_factors(n // i)\n\n    return []\n```\n\nWait, let me think about this. The function is supposed to find prime factors.\n\nLet me trace through `get_factors(100)`:\n- n = 100, not 1\n- for i in range(2, int(100 ** 0.5) + 1) = range(2, 11)\n- i = 2: 100 % 2 == 0, so return [2] + get_factor",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer correctly identifies the root-cause bug: the final `return []` should be `return [n]`, so prime numbers (and any n with no factor \u2264 sqrt(n)) incorrectly return [] instead of [n]. This matches the changed line between buggy and correct sources, despite the re",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "is_valid_parenthesization",
+        "finding": "\nLet me analyze this function.\n\nThe function is called `is_valid_parenthesization(parens)`.\n\nThe failing case is `f('((')` \u2014 but wait, the function is named `is_valid_parenthesization`, not `f`. Let me assume `f` is an alias for the function.\n\nInput `'((')` \u2014 two opening parens.\n\nLet me trace:\n- depth = 0\n- paren = '(': depth += 1 \u2192 depth = 1\n- paren = '(': depth += 1 \u2192 depth = 2\n- loop ends\n- return True\n\nSo the actual result is `True`, but the expected is `False`.\n\nWait, the problem says \"actual: <exception>\". Hmm. Let me re-read.\n\nThe problem says:\n```\nConcrete failing case:\nf('((')\n  expec",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer pinpoints the exact defect: the final `return True` should be `return depth == 0` so that unmatched opening parentheses (e.g. '((' ) cause the function to return False. This matches the changed line in the correct source, despite some tangential musing about",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "kth",
+        "finding": "\nLet me analyze this QuickSelect function.\n\nThe function is supposed to find the k-th lowest element (0-based) in an array.\n\nLet me trace through the failing case: `f([2, 6, 8, 3, 5, 7], 0)`\n\n- pivot = arr[0] = 2\n- below = [x for x in arr if x < pivot] = [] (nothing less than 2)\n- above = [x for x in arr if x > pivot] = [6, 8, 3, 5, 7]\n- num_less = len(below) = 0\n- num_lessoreq = len(arr) - len(above) = 6 - 5 = 1\n\nNow k = 0:\n- k < num_less? 0 < 0? No.\n- k >= num_lessoreq? 0 >= 1? No.\n- else: return pivot = 2.\n\nWait, that returns 2, which is correct. Let me re-check.\n\nHmm, let me re-read. Actua",
+        "judge": "{\"correct\": true, \"reason\": \"Despite rambling analysis, the reviewer identifies the exact defect: when recursing into `above`, k is passed unchanged when it should be adjusted to k - num_lessoreq, matching the fixed line exactly.\"}\nThe bug in the buggy source: when recursing into `above`, the code p",
+        "correct": null,
+        "kb": "ambig"
+      },
+      {
+        "prog": "lcs_length",
+        "finding": "\nLet me analyze this code carefully.\n\nThe function is supposed to compute the longest common substring between two strings `s` and `t`.\n\nThe code uses a `Counter` as a DP table. Let me trace through it.\n\n```python\ndef lcs_length(s, t):\n    from collections import Counter\n\n    dp = Counter()\n\n    for i in range(len(s)):\n        for j in range(len(t)):\n            if s[i] == t[j]:\n                dp[i, j] = dp[i - 1, j] + 1\n\n    return max(dp.values()) if dp else 0\n```\n\nThe bug: When `s[i] == t[j]`, it sets `dp[i, j] = dp[i - 1, j] + 1`. But this only counts the current character match, not the ",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer explicitly identifies the defective expression `dp[i, j] = dp[i - 1, j] + 1` and states the fix should be `dp[i - 1, j - 1] + 1` (noting the j-1), which exactly matches the changed line between buggy and correct sources, despite the rambling trace afterward.",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "lis",
+        "finding": "\nLet me analyze this code carefully.\n\nThe function computes the Longest Increasing Subsequence. Let me trace through the logic.\n\n`ends` is a dictionary mapping length \u2192 index of the end element of a subsequence of that length.\n\n`longest` tracks the maximum length found.\n\nFor each element `val` at index `i`:\n- `prefix_lengths = [j for j in range(1, longest + 1) if arr[ends[j]] < val]` \u2014 this finds all lengths j (from 1 to longest) where the ending element of that subsequence is less than val.\n- `length = max(prefix_lengths) if prefix_lengths else 0` \u2014 the longest such prefix.\n- Then the conditi",
+        "judge": "Let me analyze this.\n\nThe buggy code:\n```python\ndef lis(arr):\n    ends = {}\n    longest = 0\n    for i, val in enumerate(arr):\n        prefix_lengths = [j for j in range(1, longest + 1) if arr[ends[j]] < val]\n        length = max(prefix_lengths) if prefix_lengths else 0\n        if length == longest o",
+        "correct": null,
+        "kb": "ambig"
+      },
+      {
+        "prog": "longest_common_subsequence",
+        "finding": "\nLet me analyze this function carefully.\n\nThe function computes the longest common subsequence (LCS) recursively.\n\nLet me trace through the failing case: `longest_common_subsequence('ABCD', 'XBCYDQ')`\n\nThe base cases:\n- `if not a or not b: return ''`\n\nThe recursive cases:\n- `elif a[0] == b[0]: return a[0] + longest_common_subsequence(a[1:], b)`\n- `else: return max(longest_common_subsequence(a, b[1:]), longest_common_subsequence(a[1:], b), key=len)`\n\nLet me trace through:\n\n`longest_common_subsequence('ABCD', 'XBCYDQ')`\n- a[0] = 'A', b[0] = 'X', not equal\n- else branch:\n  - `longest_common_subse",
+        "judge": "Let me analyze the bug. The buggy source has:\n\n```python\nelif a[0] == b[0]:\n    return a[0] + longest_common_subsequence(a[1:], b)\n```\n\nThe correct source has:\n\n```python\nelif a[0] == b[0]:\n    return a[0] + longest_common_subsequence(a[1:], b[1:])\n```\n\nSo the bug is that when the first characters m",
+        "correct": null,
+        "kb": "ambig"
+      },
+      {
+        "prog": "max_sublist_sum",
+        "finding": "\nLet me analyze this code carefully.\n\nThe function is supposed to compute the maximum sublist sum. Let me trace through it.\n\n```python\ndef max_sublist_sum(arr):\n    max_ending_here = 0\n    max_so_far = 0\n\n    for x in arr:\n        max_ending_here = max_ending_here + x\n        max_so_far = max(max_so_far, max_ending_here)\n\n    return max_so_far\n```\n\nLet me trace through `f([3, 4, 5])`:\n- max_ending_here = 0, max_so_far = 0\n- x = 3: max_ending_here = 0 + 3 = 3, max_so_far = max(0, 3) = 3\n- x = 4: max_ending_here = 3 + 4 = 7, max_so_far = max(3, 7) = 7\n- x = 5: max_ending_here = 7 + 5 = 12, max_s",
+        "judge": "{\"correct\": false, \"reason\": \"The reviewer never identifies the actual bug: `max_ending_here = max_ending_here + x` should be `max(0, max_ending_here + x)` so the running sum resets when it goes negative (needed for arrays with negative values, e.g. [-1,2,4,-3,5,2,-5,2] or all-negative inputs). The ",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "mergesort",
+        "finding": "\nThe bug is in the line:\n\n```python\nresult.extend(left[i:] or right[j:])\n```\n\nThe `or` operator here is a logical OR, not a conditional. Since `left[i:]` is a list, if it's non-empty (truthy), it will be used. But if `left[i:]` is empty (falsy), then `right[j:]` will be used.\n\nWait, let me think about this more carefully.\n\nThe `or` operator returns the first truthy value. So `left[i:] or right[j:]`:\n- If `left[i:]` is non-empty (truthy), it returns `left[i:]`.\n- If `left[i:]` is empty (falsy), it returns `right[j:]`.\n\nSo the issue is: when both `left[i:]` and `right[j:]` are non-empty, this on",
+        "judge": "{\"correct\": false, \"reason\": \"The intended fix changes the base case from `len(arr) == 0` to `len(arr) <= 1`; the real bug is that a single-element list triggers infinite recursion (middle=0, right=mergesort(arr[0:]) recurses forever). The reviewer instead targets `result.extend(left[i:] or right[j:",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "next_palindrome",
+        "finding": "\nLet me analyze this function carefully.\n\nThe function finds the next palindrome given a palindrome. Let me trace through the logic.\n\nFor a palindrome, we have digits from most significant to least significant. The middle is at `high_mid = len(digit_list) // 2` and `low_mid = (len(digit_list) - 1) // 2`.\n\nFor `[1,4,9,4,1]`: len = 5, high_mid = 2, low_mid = 2.\n\nThe algorithm tries to increment the middle digit(s). If the middle is 9, it carries over.\n\nLet me trace the failing case `[1,3,1]`:\n- len = 3, high_mid = 1, low_mid = 1.\n- Loop: high_mid (1) < len (3) and low_mid (1) >= 0.\n- digit_list[",
+        "judge": "{\"correct\": false, \"reason\": \"The actual bug is in the overflow return statement: it should be `(len(digit_list) - 1) * [0]` so that an all-9s input like [9,9,9] yields [1,0,0,1]; the buggy version yields [1,0,0,0,1] (length + 2 instead of length + 1). The reviewer never identifies this defect\u2014they ",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "next_permutation",
+        "finding": "\n\nThe bug is in the inner-loop comparison:\n\n**1. The wrong line:**\n```\nif perm[j] < perm[i]:\n```\n\n**2. Why it's wrong:**\nThis condition searches for an element to the right of `i` that is *smaller* than `perm[i]`. But the next-permutation algorithm needs to find the element just to the right of `i` that is *larger* than `perm[i]` (the smallest such increase, scanning from the right). With `<`, the search never matches for `[3, 4, 5]`: at `i=1`, `perm[2]=5` is not `< perm[1]=4`; at `i=0`, neither `5` nor `4` is `< 3`. So the function falls through and returns `None` (the exception).\n\n**3. Corre",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer pinpoints the inner-loop condition `if perm[j] < perm[i]:` as the bug and proposes `perm[j] > perm[i]`, which is logically equivalent to the fix in the correct source (`if perm[i] < perm[j]:`). Same line, same defect: the comparison direction for finding j >",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "pascal",
+        "finding": "\nLet me analyze this function carefully.\n\nThe function is supposed to return the first `n` rows of Pascal's triangle.\n\nFor `n=1`, expected `[[1]]`.\n\nLet's trace through `pascal(1)`:\n- `rows = [[1]]`\n- `for r in range(1, 1):` \u2014 this range is empty, so the loop doesn't execute.\n- `return rows` \u2014 returns `[[1]]`.\n\nWait, that should work. Let me re-read.\n\nActually wait, let me re-read the example output. The example says:\n```\n>>> pascal(5)\n[[1], [1, 1], [1, 2, 1], [1, 3, 3, 1], [1, 4, 6, 4, 1]]\n```\n\nHmm, that's 5 rows but each row has increasing length. Row 1 has 1 element, row 2 has 2 elements, e",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer correctly identifies that the inner loop `for c in range(0, r)` produces only `r` elements per row when it should produce `r+1`, and that the fix is changing it to `range(0, r+1)` \u2014 exactly the line/expression changed in the correct source.\"}\nThe bug: inner ",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "possible_change",
+        "finding": "\nLet me analyze this function.\n\n```python\ndef possible_change(coins, total):\n    if total == 0:\n        return 1\n    if total < 0:\n        return 0\n\n    first, *rest = coins\n    return possible_change(coins, total - first) + possible_change(rest, total)\n```\n\nThe bug is in the recursive call. Let me trace through `possible_change([1, 4, 2], -7)`.\n\nWait, the input is `total = -7`. Let me trace.\n\n`possible_change([1, 4, 2], -7)`:\n- total == 0? No.\n- total < 0? Yes, return 0.\n\nSo it should return 0. But the actual is an exception.\n\nWait, let me re-read. The failing case is `f([1, 4, 2], -7)`.\n\nHmm",
+        "judge": "{\"correct\": false, \"reason\": \"The actual bug is a missing base case for an empty coins list: when `rest` becomes empty while total > 0, `first, *rest = coins` raises an unpacking exception; the fix adds `not coins` to the base case. The reviewer never identifies this defect \u2014 they only speculate abo",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "powerset",
+        "finding": "\nLet me analyze this function.\n\nThe function is:\n\n```python\ndef powerset(arr):\n    if arr:\n        first, *rest = arr\n        rest_subsets = powerset(rest)\n        return [[first] + subset for subset in rest_subsets]\n    else:\n        return [[]]\n```\n\nThe bug is in the base case. When `arr` is empty, it returns `[[]]`.\n\nWait, let me think about this. The precondition says arr has no duplicate elements.\n\nLet's trace through `powerset([])`:\n- `arr` is empty, so we go to the else branch\n- returns `[[]]`\n\nThat seems correct actually. Let me re-read.\n\nWait, the failing case is `f([])` where `f` is ",
+        "judge": "{\"correct\": true, \"reason\": \"Despite some rambling about the empty-input case, the reviewer ultimately pinpoints the actual defect: the return statement omits `rest_subsets +`, returning only `[[first] + subset for subset in rest_subsets]` instead of `rest_subsets + [[first] + subset for subset in r",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "quicksort",
+        "finding": "\nLet me analyze this quicksort function.\n\nThe function sorts by picking the first element as pivot, then recursively sorting elements less than and greater than the pivot.\n\nLet me trace through `f([5, 4, 3, 2, 1])`:\n- pivot = 5\n- lesser = quicksort([x for x in [4,3,2,1] if x < 5]) = quicksort([4,3,2,1])\n  - pivot = 4\n  - lesser = quicksort([x for x in [3,2,1] if x < 4]) = quicksort([3,2,1])\n    - pivot = 3\n    - lesser = quicksort([x for x in [2,1] if x < 3]) = quicksort([2,1])\n      - pivot = 2\n      - lesser = quicksort([x for x in [1] if x < 2]) = quicksort([1])\n        - pivot = 1\n        ",
+        "judge": "{\"correct\": false, \"reason\": \"The actual bug is in the partition condition: `greater = quicksort([x for x in arr[1:] if x > pivot])` drops elements equal to the pivot, so duplicates are silently lost (fix changes `>` to `>=`). The reviewer never identifies this; they trace an example with all-distin",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "rpn_eval",
+        "finding": "\nLet me analyze this RPN calculator bug.\n\nThe function has a bug. Let me trace through the failing case:\n\n`rpn_eval([2.0, 2.0, '+'])`\n\n- token = 2.0 (float), stack = [2.0]\n- token = 2.0 (float), stack = [2.0, 2.0]\n- token = '+', not a float, so:\n  - a = stack.pop() = 2.0\n  - b = stack.pop() = 2.0\n  - stack.append(op('+', a, b))\n  - op('+', 2.0, 2.0) = 2.0 + 2.0 = 4.0\n  - stack = [4.0]\n- return stack.pop() = 4.0\n\nWait, that should work. Let me re-read.\n\nHmm, the expected is 4.0 and actual is an exception. Let me look more carefully.\n\nWait, the issue is the `isinstance(token, float)` check. Let ",
+        "judge": "{\"correct\": false, \"reason\": \"The reviewer's analysis rambles and never identifies the actual defect. The real bug is the operand order in the operator application: `op(token, a, b)` uses `a = stack.pop()` (the top/second operand) as the first argument, so for '-' and '/' the operands are reversed (",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "shunting_yard",
+        "finding": "\nLet me analyze this shunting-yard algorithm.\n\nThe function has a bug. Let me trace through it.\n\n```python\ndef shunting_yard(tokens):\n    precedence = {\n        '+': 1,\n        '-': 1,\n        '*': 2,\n        '/': 2\n    }\n\n    rpntokens = []\n    opstack = []\n    for token in tokens:\n        if isinstance(token, int):\n            rpntokens.append(token)\n        else:\n            while opstack and precedence[token] <= precedence[opstack[-1]]:\n                rpntokens.append(opstack.pop())\n\n    while opstack:\n        rpntokens.append(opstack.pop())\n\n    return rpntokens\n```\n\nThe failing case is ",
+        "judge": "{\"correct\": false, \"reason\": \"The reviewer never identifies the actual bug: the else branch pops operators but never pushes the current operator onto opstack (missing `opstack.append(token)`). Instead, the finding rambles about an empty-input exception case that does not exist, and the analysis is c",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "sieve",
+        "finding": "\nLet me analyze this function carefully.\n\nThe function is supposed to be a Sieve of Eratosthenes, but it's actually not a sieve at all \u2014 it's a trial division approach. Let me trace through it.\n\n```python\ndef sieve(max):\n    primes = []\n    for n in range(2, max + 1):\n        if any(n % p > 0 for p in primes):\n            primes.append(n)\n    return primes\n```\n\nLet me trace through the failing case `f(1)`:\n- `primes = []`\n- `range(2, 1 + 1)` = `range(2, 2)` = empty range\n- So the loop doesn't execute\n- `return primes` returns `[]`\n\nWait, that returns `[]` which is the expected output. Hmm.\n\nWa",
+        "judge": "{\"correct\": true, \"reason\": \"The reviewer ultimately pinpoints the exact defect: the condition `if any(n % p > 0 for p in primes):` should be `all(...)` (i.e., append n only when no found prime divides it). This matches the changed line/expression in the fix (any \u2192 all), and the proposed corrected e",
+        "correct": true,
+        "kb": "correct"
+      },
+      {
+        "prog": "subsequences",
+        "finding": "\nLet me analyze this function.\n\nThe function is supposed to generate all length-k ascending sequences of ints in range(a, b).\n\nLet me look at the loop:\n\n```python\nfor i in range(a, b + 1 - k):\n```\n\nThe expected output for subsequences(a=1, b=5, k=3) is [[1, 2, 3], [1, 2, 4], [1, 3, 4], [2, 3, 4]].\n\nSo the range should be from a=1 to b-k = 5-3 = 2, inclusive. So range(1, 3) gives 1, 2. That's correct: range(a, b + 1 - k) = range(1, 5+1-3) = range(1, 3) = [1, 2]. Good.\n\nNow the failing case: f(30, 2, 3). Here a=30, b=2, k=3.\n\nThe range is range(30, 2 + 1 - 3) = range(30, 0). Since 30 > 0, this r",
+        "judge": "{\"correct\": false, \"reason\": \"The actual bug is the base case `return []` when k == 0, which should be `return [[]]`; the empty base makes every recursive extension empty so all calls return []. The reviewer instead analyzes the range formula (correctly concluding it works) and traces an unrelated c",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "to_base",
+        "finding": "\nLet me analyze this function.\n\n```python\nimport string\ndef to_base(num, b):\n    result = ''\n    alphabet = string.digits + string.ascii_uppercase\n    while num > 0:\n        i = num % b\n        num = num // b\n        result = result + alphabet[i]\n    return result\n```\n\nThe precondition says `num > 0`. But the failing case is `f(16, 19)`.\n\nLet me trace through:\n- num = 16, b = 19\n- First iteration: i = 16 % 19 = 16, num = 16 // 19 = 0, result = alphabet[16] = 'G'\n- num is now 0, so loop ends.\n- Return 'G'\n\nWait, that should work. Let me re-check.\n\nActually wait, 16 % 19 = 16, and alphabet[16] =",
+        "judge": "{\"correct\": false, \"reason\": \"The reviewer never identifies the actual bug. The real defect is that digits are appended in least-significant-first order (`result = result + alphabet[i]`), producing a reversed string; the fix prepends (`result = alphabet[i] + result`). The reviewer instead fixates on",
+        "correct": false,
+        "kb": "wrong"
+      },
+      {
+        "prog": "wrap",
+        "finding": "\nLet me analyze this bug carefully.\n\nThe function is supposed to wrap text into lines of at most `cols` characters.\n\nThe while loop condition is `while len(text) > cols:`\n\nThe bug: Consider the case where `text` is exactly `cols` long. Then `len(text) > cols` is False, so the loop exits, and `text` is returned as-is. That's fine.\n\nBut consider the case where `text` is exactly `cols + 1` long... no wait.\n\nLet me think about the actual bug. The condition is `while len(text) > cols:`. \n\nThe problem: if `text` has length exactly equal to `cols`, the loop won't run, and it's returned. That's fine.\n",
+        "judge": "{\"correct\": false, \"reason\": \"The actual bug is that the final remaining text (length <= cols) is never appended to the result \u2014 the correct source adds `lines.append(text)` before `return`. The reviewer instead rambles about the loop condition `len(text) > cols` and slicing edge cases, never identi",
+        "correct": false,
+        "kb": "wrong"
+      }
+    ],
+    "recall": 9,
+    "n": 23,
+    "seconds": 686
+  }
+}

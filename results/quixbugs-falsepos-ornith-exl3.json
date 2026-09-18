@@ -1,0 +1,193 @@
+{
+  "ornith": {
+    "results": [
+      {
+        "prog": "bucketsort",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this function carefully.\n\nThe function is a counting sort / bucket sort that counts occurrences of each value in the array, then reconstructs the sorted array.\n\nLet me look at the main function:\n\n```python\ndef bucketsort(arr, k):\n    counts = [0] * k\n    for x in arr:\n        counts[x] += 1\n\n    sorted_arr = []\n    for i, count in enumerate(counts):\n        sorted_arr.extend([i] * count)\n\n    return sorted_arr\n```\n\nLet me trace through this.\n\n`counts = [0] * k` creates a list of k",
+        "judge": "Let me analyze this carefully.\n\nThe function source contains:\n1. A main function `bucketsort(arr, k)` - the active code\n2. A docstring containing an alternative version (commented out via docstring)\n\n"
+      },
+      {
+        "prog": "find_in_sorted",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this binary search function carefully.\n\nThe function is `find_in_sorted(arr, x)` which does a binary search.\n\nLet me trace through the logic.\n\n```python\ndef find_in_sorted(arr, x):\n    def binsearch(start, end):\n        if start == end:\n            return -1\n        mid = start + (end - start) // 2\n        if x < arr[mid]:\n            return binsearch(start, mid)\n        elif x > arr[mid]:\n            return binsearch(mid + 1, end)\n        else:\n            return mid\n\n    return ",
+        "judge": "Let me analyze this carefully.\n\nThe function is a classic binary search implementation:\n\n```python\ndef find_in_sorted(arr, x):\n    def binsearch(start, end):\n        if start == end:\n            retur"
+      },
+      {
+        "prog": "gcd",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "NO ISSUE\n\nThis is the standard recursive Euclidean algorithm for computing the greatest common divisor. The base case returns `a` when `b == 0`, which is correct because at that point `a` holds the GCD. The recursive step `gcd(b, a % b)` is the correct reduction. Tracing `gcd(12, 8)`:\n\n- `gcd(12, 8)` \u2192 `gcd(8, 4)` \u2192 `gcd(4, 0)` \u2192 returns `4` \u2713\n\nIt also handles edge cases correctly:\n- `gcd(0, 5)` \u2192 `gcd(5, 0)` \u2192 returns `5` \u2713\n- `gcd(0, 0)` \u2192 returns `0` \u2713\n- Negative inputs work because Python's `",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model replied 'NO ISSUE', which is accurate. The function implements the standard recursive Euclidean algorithm correctly: gcd(12, 8) \u2192 gcd(8, "
+      },
+      {
+        "prog": "get_factors",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this function carefully.\n\nThe function is supposed to return factors of `n`. Let me trace through it.\n\n```python\ndef get_factors(n):\n    if n == 1:\n        return []\n\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0:\n            return [i] + get_factors(n // i)\n\n    return [n]\n```\n\nWait, let me think about what this function is supposed to do. It seems to be trying to find factors of `n`.\n\nLet me trace through some examples.\n\n`get_factors(1)`: returns `[]`. So facto",
+        "judge": "Let me analyze this carefully.\n\nThe function source contains a `get_factors` function that appears to be a prime factorization function:\n\n```python\ndef get_factors(n):\n    if n == 1:\n        return []"
+      },
+      {
+        "prog": "is_valid_parenthesization",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "Let me analyze the Python function for bugs.\n\nThe function is:\n\n```python\ndef is_valid_parenthesization(parens):\n    depth = 0\n    for paren in parens:\n        if paren == '(':\n            depth += 1\n        else:\n            depth -= 1\n            if depth < 0:\n                return False\n\n    return depth == 0\n```\n\nLet me trace through this logic.\n\nThe function checks if a string of parentheses is valid (properly nested and balanced).\n\nThe algorithm:\n- Initialize depth to 0\n- For each paren:\n",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model's reply concludes with 'the answer is NO ISSUE', explicitly stating the function is correct. The function itself is indeed a correct impl"
+      },
+      {
+        "prog": "kth",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this function carefully.\n\nThe function is trying to find the k-th smallest element in an array (0-indexed presumably).\n\nLet me trace through the logic.\n\n```python\ndef kth(arr, k):\n    pivot = arr[0]\n    below = [x for x in arr if x < pivot]\n    above = [x for x in arr if x > pivot]\n\n    num_less = len(below)\n    num_lessoreq = len(arr) - len(above)\n```\n\n`num_less` = number of elements strictly less than pivot.\n`num_lessoreq` = len(arr) - len(above) = number of elements that are NO",
+        "judge": "Let me analyze the function:\n\n```python\ndef kth(arr, k):\n    pivot = arr[0]\n    below = [x for x in arr if x < pivot]\n    above = [x for x in arr if x > pivot]\n\n    num_less = len(below)\n    num_lesso"
+      },
+      {
+        "prog": "lcs_length",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this function carefully.\n\nThe function is supposed to compute the length of the longest common subsequence (LCS) of two strings `s` and `t`.\n\nLet me trace through the logic.\n\nThe standard LCS dynamic programming approach uses a 2D table `dp[i][j]` representing the LCS length of `s[0..i-1]` and `t[0..j-1]`.\n\nThe recurrence is:\n- If `s[i-1] == t[j-1]`: `dp[i][j] = dp[i-1][j-1] + 1`\n- Else: `dp[i][j] = max(dp[i-1][j], dp[i][j-1])`\n\nThe key insight is that the DP table needs base case",
+        "judge": "Let me analyze this function carefully.\n\n```python\ndef lcs_length(s, t):\n    from collections import Counter\n\n    dp = Counter()\n\n    for i in range(len(s)):\n        for j in range(len(t)):\n          "
+      },
+      {
+        "prog": "lis",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this Longest Increasing Subsequence (LIS) function carefully.\n\nThe function computes the length of the longest strictly increasing subsequence.\n\nLet me trace through the logic.\n\n`ends` is a dictionary mapping length -> index of the end element of the best subsequence of that length.\n`longest` tracks the current maximum length found.\n\nFor each element `val` at index `i`:\n- `prefix_lengths` = list of lengths `j` (from 1 to longest) where `arr[ends[j]] < val`. This finds the longest ",
+        "judge": "Let me analyze this carefully.\n\nThe function is a classic LIS (longest increasing subsequence) implementation, similar to one from a known codebase (HumanEval-ish \"lis\" function, actually it's from a "
+      },
+      {
+        "prog": "longest_common_subsequence",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "Let me analyze this function for computing the longest common subsequence (LCS).\n\nThe function is:\n\n```python\ndef longest_common_subsequence(a, b):\n    if not a or not b:\n        return ''\n\n    elif a[0] == b[0]:\n        return a[0] + longest_common_subsequence(a[1:], b[1:])\n\n    else:\n        return max(\n            longest_common_subsequence(a, b[1:]),\n            longest_common_subsequence(a[1:], b),\n            key=len\n        )\n```\n\nLet me trace through this carefully.\n\nThe LCS problem: fin",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model concluded 'NO ISSUE' after verifying the standard LCS recurrence. The function correctly implements LCS: empty base case, matching first "
+      },
+      {
+        "prog": "max_sublist_sum",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this function carefully.\n\nThe function `max_sublist_sum` is the classic Kadane's algorithm for finding the maximum subarray sum.\n\nLet me trace through the logic:\n\n```python\ndef max_sublist_sum(arr):\n    max_ending_here = 0\n    max_so_far = 0\n\n    for x in arr:\n        max_ending_here = max(0, max_ending_here + x)\n        max_so_far = max(max_so_far, max_ending_here)\n\n    return max_so_far\n```\n\nThis is the standard Kadane's algorithm. Let me think about whether it has bugs.\n\nThe st",
+        "judge": "Let me analyze this carefully.\n\nThe function source contains a main function (outside the docstring) and then a docstring containing several alternative versions.\n\nMain function:\n```python\ndef max_sub"
+      },
+      {
+        "prog": "mergesort",
+        "claimed": false,
+        "real": false,
+        "fp": false,
+        "finding": "Let me analyze this mergesort function carefully.\n\nThe function is a recursive merge sort. Let me trace through it.\n\n```python\ndef mergesort(arr):\n    def merge(left, right):\n        result = []\n        i = 0\n        j = 0\n        while i < len(left) and j < len(right):\n            if left[i] <= right[j]:\n                result.append(left[i])\n                i += 1\n            else:\n                result.append(right[j])\n                j += 1\n        result.extend(left[i:] or right[j:])\n     ",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model thoroughly traced the mergesort algorithm, verified the merge logic including the `left[i:] or right[j:]` idiom, and confirmed the base c"
+      },
+      {
+        "prog": "next_palindrome",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this function carefully.\n\nThe function is called `next_palindrome` and takes a `digit_list`. Let me understand what it's supposed to do.\n\nIt seems to be computing the next palindrome number given a list of digits. Let me trace through the logic.\n\nFor a palindrome, the digits are mirrored. For example:\n- 12321 is a palindrome\n- 12320 is not, the next palindrome would be 12321\n\nThe idea: Take the first half of the digits. If we increment the middle digit(s), we get a new palindrome.",
+        "judge": "The model reply is a trace/analysis. The question: did the model claim a bug exists?\n\nLooking at the reply, the model is analyzing the function, tracing through examples. At one point it says \"Wait, t"
+      },
+      {
+        "prog": "next_permutation",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this function carefully.\n\nThe function is meant to compute the next lexicographic permutation of a given permutation.\n\nLet me recall the standard algorithm for next permutation:\n\n1. Find the largest index `i` such that `perm[i] < perm[i+1]`. If no such index exists, the permutation is the last permutation.\n2. Find the largest index `j` greater than `i` (i.e., `j > i`) such that `perm[i] < perm[j]`.\n3. Swap `perm[i]` and `perm[j]`.\n4. Reverse the sequence from `perm[i+1]` up to the",
+        "judge": "Let me analyze this carefully.\n\nThe function source contains the actual function and then a commented-out version (inside triple quotes, so it's just a string expression, effectively a comment).\n\nThe "
+      },
+      {
+        "prog": "pascal",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this Pascal's triangle function carefully.\n\nThe function generates Pascal's triangle. Let me trace through it.\n\n```python\ndef pascal(n):\n    rows = [[1]]\n    for r in range(1, n):\n        row = []\n        for c in range(0, r + 1):\n            upleft = rows[r - 1][c - 1] if c > 0 else 0\n            upright = rows[r - 1][c] if c < r else 0\n            row.append(upleft + upright)\n        rows.append(row)\n\n    return rows\n```\n\nLet me trace through with n = 4.\n\nInitial: `rows = [[1]]`",
+        "judge": "Let me analyze this carefully.\n\nThe function:\n```python\ndef pascal(n):\n    rows = [[1]]\n    for r in range(1, n):\n        row = []\n        for c in range(0, r + 1):\n            upleft = rows[r - 1][c "
+      },
+      {
+        "prog": "possible_change",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this Python function for bugs.\n\nThe function is meant to count the number of ways to make change for `total` using `coins`.\n\nLet me trace through the logic:\n\n```python\ndef possible_change(coins, total):\n    if total == 0:\n        return 1\n    if total < 0 or not coins:\n        return 0\n\n    first, *rest = coins\n    return possible_change(coins, total - first) + possible_change(rest, total)\n```\n\nThe idea is a recursive count of ways to make change.\n\nLet me think about the recursion",
+        "judge": "Let me analyze this task. The function source contains a `possible_change` function (which is the classic coin change counting algorithm) plus a docstring-like block containing several variant version"
+      },
+      {
+        "prog": "powerset",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this Python function carefully.\n\nThe function is `powerset(arr)` which should return the powerset of an array.\n\nLet me trace through the logic.\n\nThe function is given:\n```python\ndef powerset(arr):\n    if arr:\n        first, *rest = arr\n        rest_subsets = powerset(rest)\n        return rest_subsets + [[first] + subset for subset in rest_subsets]\n    else:\n        return [[]]\n```\n\nLet me trace through with an example. Say `arr = [1, 2]`.\n\nBase case: `powerset([])` returns `[[]]`.",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model traced through the function with examples and concluded both the main function and the commented variant correctly compute the powerset ("
+      },
+      {
+        "prog": "quicksort",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this quicksort function carefully.\n\nThe function is:\n```python\ndef quicksort(arr):\n    if not arr:\n        return []\n\n    pivot = arr[0]\n    lesser = quicksort([x for x in arr[1:] if x < pivot])\n    greater = quicksort([x for x in arr[1:] if x >= pivot])\n    return lesser + [pivot] + greater\n```\n\nLet me trace through this. The function is supposed to sort an array using quicksort.\n\nThe pivot is `arr[0]`.\n- `lesser` is the quicksort of elements strictly less than pivot (`x < pivot`",
+        "judge": "{\"claimed_bug\": false, \"real_bug\": false, \"reason\": \"The model did not assert a bug; it traced multiple examples (including duplicates) and explicitly concluded both partitioning schemes (x<pivot / x>"
+      },
+      {
+        "prog": "rpn_eval",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this RPN (Reverse Polish Notation) evaluator function.\n\nLet me understand RPN evaluation. In RPN, you have tokens like `3 4 +` which means 3 + 4 = 7.\n\nWhen you process `3 4 +`:\n- Push 3\n- Push 4\n- Process `+`: pop two values. The first popped is 4 (top of stack), the second popped is 3. So a = 4, b = 3. Then a + b = 4 + 3 = 7.\n\nSo the correct behavior: when you pop a then b, a is the top (most recent), b is the one below. For subtraction `a - b`, if we have `3 4 -`, we want 3 - 4 ",
+        "judge": "Let me analyze this carefully.\n\nThe function is `rpn_eval(tokens)`. Let me trace through it.\n\n```python\ndef rpn_eval(tokens):\n    def op(symbol, a, b):\n        return {\n            '+': lambda a, b: a"
+      },
+      {
+        "prog": "shunting_yard",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this shunting yard algorithm for bugs.\n\nThe function converts infix tokens to postfix (Reverse Polish Notation) using the shunting-yard algorithm.\n\nLet me trace through the algorithm:\n\n```python\ndef shunting_yard(tokens):\n    precedence = {\n        '+': 1,\n        '-': 1,\n        '*': 2,\n        '/': 2\n    }\n\n    rpntokens = []\n    opstack = []\n    for token in tokens:\n        if isinstance(token, int):\n            rpntokens.append(token)\n        else:\n            while opstack an",
+        "judge": "Let me analyze this function and the model's reply.\n\nThe function is a shunting-yard algorithm for converting infix tokens to RPN. Let me check for bugs:\n\n```python\ndef shunting_yard(tokens):\n    prec"
+      },
+      {
+        "prog": "sieve",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze the function carefully.\n\nThe function is a sieve that finds primes up to `max`.\n\n```python\ndef sieve(max):\n    primes = []\n    for n in range(2, max + 1):\n        if all(n % p > 0 for p in primes):\n            primes.append(n)\n    return primes\n```\n\nLet me trace through this.\n\nThe idea is: for each n from 2 to max, if n is not divisible by any prime already found, then n is prime, so append it.\n\nLet me check the logic.\n\nFor n = 2: primes is empty. `all(...)` over empty generator i",
+        "judge": "Let me analyze this carefully.\n\nThe function source contains one main function at the top:\n\n```python\ndef sieve(max):\n    primes = []\n    for n in range(2, max + 1):\n        if all(n % p > 0 for p in "
+      },
+      {
+        "prog": "subsequences",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this function carefully.\n\nThe function is called `subsequences(a, b, k)`. Let me understand what it's supposed to do.\n\nLooking at the code:\n- If `k == 0`, return `[[]]` (a list containing one empty list).\n- Otherwise, iterate `i` from `a` to `b + 1 - k`, and for each `i`, extend `ret` with `[i] + rest` for each `rest` in `subsequences(i + 1, b, k - 1)`.\n\nLet me trace through an example. Let's say `a = 1, b = 3, k = 2`.\n\nWait, let me think about what \"subsequences\" means here. It s",
+        "judge": "Let me analyze this function carefully.\n\nThe function is:\n\n```python\ndef subsequences(a, b, k):\n    if k == 0:\n        return [[]]\n\n    ret = []\n    for i in range(a, b + 1 - k):\n        ret.extend(\n "
+      },
+      {
+        "prog": "to_base",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this Python function carefully.\n\nThe function `to_base(num, b)` converts a number to a given base.\n\nLet me look at the main function:\n\n```python\nimport string\ndef to_base(num, b):\n    result = ''\n    alphabet = string.digits + string.ascii_uppercase\n    while num > 0:\n        i = num % b\n        num = num // b\n        result = alphabet[i] + result\n    return result\n```\n\nLet me trace through this. The alphabet is \"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ\".\n\nFor example, converting 255 ",
+        "judge": "Let me analyze this carefully.\n\nThe function source contains a main function `to_base` that converts a number to a given base using `result = alphabet[i] + result` (prepending). This builds the string"
+      },
+      {
+        "prog": "wrap",
+        "claimed": null,
+        "real": null,
+        "fp": false,
+        "finding": "Let me analyze this function carefully.\n\nThe function is supposed to wrap text to a given number of columns.\n\n```python\ndef wrap(text, cols):\n    lines = []\n    while len(text) > cols:\n        end = text.rfind(' ', 0, cols + 1)\n        if end == -1:\n            end = cols\n        line, text = text[:end], text[end:]\n        lines.append(line)\n\n    lines.append(text)\n    return lines\n```\n\nLet me trace through this.\n\nThe goal is to wrap text so each line is at most `cols` characters wide.\n\nLet's tr",
+        "judge": "Let me analyze the function source carefully.\n\n```python\ndef wrap(text, cols):\n    lines = []\n    while len(text) > cols:\n        end = text.rfind(' ', 0, cols + 1)\n        if end == -1:\n            e"
+      }
+    ],
+    "fp": 0,
+    "n": 23,
+    "noissue_clean": 23
+  }
+}

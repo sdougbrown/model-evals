@@ -1,0 +1,19 @@
+description: 'CRUXEval-O: ornith (pass@1)'
+evaluateOptions:
+  maxConcurrency: 1
+providers:
+- id: openai:chat:ornith
+  label: qwen35-9b
+  config:
+    apiBaseUrl: http://127.0.0.1:8088/v1
+    apiKey: none
+    model: qwen35-9b
+    max_tokens: 8192
+    temperature: 0.6
+    top_p: 0.95
+prompts:
+- "You are given a Python function. Determine what it returns when called with the\
+  \ provided input.\n\n```python\n{{code}}\n```\n\nWhat does `{{input}}` return?\n\
+  \nRespond with ONLY the Python literal return value \u2014 for example: `42`, `'hello'`,\
+  \ `[1, 2, 3]`, `None`, `True`. No explanation, no code block, just the value.\n"
+tests: file://tests.yaml
