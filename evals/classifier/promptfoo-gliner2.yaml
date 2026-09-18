@@ -1,0 +1,19 @@
+# Classifier eval — GLiNER2.5-multi zero-shot disposition probe.
+# 280M encoder called directly (no chat prompt) via providers/gliner2.js and
+# the local gliner2 service on rusty (hosts/rusty/serve-gliner.sh, port 8090).
+# Same 6-case core set + deterministic JSON assertions as the qwen/gemma runs,
+# so scores are directly comparable. Zero-shot expectation: NOT gemma-level —
+# this measures whether the linguistic disposition subtask is learnable cheaply.
+description: "Classifier: gliner2.5-multi zero-shot (disposition probe)"
+
+evaluateOptions:
+  maxConcurrency: 1 # CPU encoder; serialize to keep latencies honest
+
+providers:
+  - id: file://../../providers/gliner2.js
+    label: gliner2.5-multi (zero-shot)
+
+prompts:
+  - "gliner2 classify-finding" # nominal; the provider uses vars, not the prompt
+
+tests: file://tests.yaml
