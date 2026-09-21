@@ -1,0 +1,21 @@
+# Classifier eval — Laya fine-tuned on the umpire corpus (RLCD, single 3090).
+# Base: convaiinnovations/laya typed-decisions checkpoint (1024 ctx), RLCD
+# fine-tune per the official notebook recipe adapted single-GPU
+# (scripts/train-laya-umpire.py). Best checkpoint by val CE is served from
+# LAYA_UMPIRE_DIR via the service's /v1/laya/classify-finding model=umpire.
+description: "Classifier: laya-umpire (RLCD fine-tuned)"
+
+evaluateOptions:
+  maxConcurrency: 1
+
+providers:
+  - id: file://../../providers/laya.js
+    label: laya-umpire (fine-tuned)
+    config:
+      env:
+        LAYA_VARIANT: umpire
+
+prompts:
+  - "laya classify-finding"
+
+tests: file://tests.yaml

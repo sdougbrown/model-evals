@@ -4,3 +4,4 @@ evals/cruxeval/tests.yaml
 evals/pr-review/testdata/*.diff
 __pycache__/
 data/
+models/

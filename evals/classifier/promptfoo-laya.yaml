@@ -1,0 +1,19 @@
+# Classifier eval — Laya zero-shot System-1 typed decisions.
+# 421M ModernBERT decision head, RLCD-calibrated probabilities, single forward
+# pass. Served by the same local service as the GLiNER provider
+# (hosts/rusty/serve-gliner.sh, port 8090). Same 6-case core + assertions.
+# Model-card caveat: near chance zero-shot on typed-decision workflows — this
+# run baselines the base checkpoint before any umpire fine-tune.
+description: "Classifier: laya zero-shot (System-1 typed decisions)"
+
+evaluateOptions:
+  maxConcurrency: 1
+
+providers:
+  - id: file://../../providers/laya.js
+    label: laya (zero-shot)
+
+prompts:
+  - "laya classify-finding"
+
+tests: file://tests.yaml
