@@ -54,6 +54,8 @@
     finding_id: '3322011710'
     finding_path: internal/runtime/pony/agent_tools.go
     finding_line: '111'
+    line_start: '105'
+    line_end: '125'
     finding_created: '2026-06-01T00:00:00Z'
     finding_body: spawnAgentsTool runs agents sequentially in a for loop despite the
       description saying 'All agents run concurrently.'
@@ -74,12 +76,21 @@
   - type: javascript
     value: 'output.includes(''"classification": "still_valid"'') || output.includes(''"classification":"still_valid"'')'
   - type: javascript
+    value: |-
+      return (() => {
+        const m = output.match(/"evidence"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+        if (!m) return false;
+        return /[A-Za-z0-9_@.\/\\-]+\.[A-Za-z0-9]{1,8}:[0-9]{1,6}/.test(m[1]);
+      })()
+  - type: javascript
     value: 'output.includes(''"disposition": "accepted"'') || output.includes(''"disposition":"accepted"'')'
 - description: 'avenor/34: spawnAgents partial failure — accepted with follow-up tracking'
   vars:
     finding_id: '3322114811'
     finding_path: internal/runtime/pony/agent_tools.go
     finding_line: '157'
+    line_start: '151'
+    line_end: '171'
     finding_created: '2026-06-01T00:00:00Z'
     finding_body: '`spawnAgentsTool.Execute` has partial failure semantics: if agent
       N fails to spawn, agents 0..N-1 are already spawned with no way to roll them
@@ -99,12 +110,21 @@
   - type: javascript
     value: 'output.includes(''"classification": "still_valid"'') || output.includes(''"classification":"still_valid"'')'
   - type: javascript
+    value: |-
+      return (() => {
+        const m = output.match(/"evidence"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+        if (!m) return false;
+        return /[A-Za-z0-9_@.\/\\-]+\.[A-Za-z0-9]{1,8}:[0-9]{1,6}/.test(m[1]);
+      })()
+  - type: javascript
     value: 'output.includes(''"disposition": "accepted"'') || output.includes(''"disposition":"accepted"'')'
 - description: 'avenor/34: requestID timer closure — user claims false positive, accepted'
   vars:
     finding_id: '3322011750'
     finding_path: internal/stable/supervisor.go
     finding_line: '1343'
+    line_start: '1337'
+    line_end: '1357'
     finding_created: '2026-06-01T00:00:00Z'
     finding_body: 'Race condition in RuntimeSendToParent timer closure: the `requestID`
       variable is captured by reference in the `time.AfterFunc` closure.'
@@ -126,6 +146,24 @@
   assert:
   - type: javascript
     value: 'output.includes(''"classification": "still_valid"'') || output.includes(''"classification":"still_valid"'')'
+  # Production end-to-end: this raw output survives validation iff the
+  # still_valid carried a path:line citation, or the validator downgraded to
+  # uncertain while preserving the accepted disposition (umpire-bot#77).
+  - type: javascript
+    value: |-
+      return (() => {
+        const cls = output.match(/"classification"\s*:\s*"([^"]*)"/);
+        const ev = output.match(/"evidence"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+        const dis = output.match(/"disposition"\s*:\s*"([^"]*)"/);
+        if (!cls || !dis) return false;
+        const cited = ev && /[A-Za-z0-9_@.\/\\-]+\.[A-Za-z0-9]{1,8}:[0-9]{1,6}/.test(ev[1]);
+        if (cls[1] === "still_valid") {
+          // Cited: stands as-is. Uncited: downgraded to uncertain, accepted
+          // disposition preserved (validateAndClassify).
+          return cited || dis[1] === "accepted";
+        }
+        return cls[1] === "uncertain" && dis[1] === "accepted";
+      })()
   - type: javascript
     value: 'output.includes(''"disposition": "accepted"'') || output.includes(''"disposition":"accepted"'')'
 - description: 'avenor/28: credentials in URL doc example — no discussion, needs action'
@@ -133,6 +171,8 @@
     finding_id: '3300533985'
     finding_path: docs/backends.md
     finding_line: '93'
+    line_start: '87'
+    line_end: '107'
     finding_created: '2026-05-26T00:53:42Z'
     finding_body: Credentials embedded in URL (`http://user:pass@...`) without any
       warning. `docs/control-protocol.md` warns about token leakage via query parameters,
@@ -156,4 +196,121 @@
   - type: javascript
     value: 'output.includes(''"classification": "still_valid"'') || output.includes(''"classification":"still_valid"'')'
   - type: javascript
+    value: |-
+      return (() => {
+        const m = output.match(/"evidence"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+        if (!m) return false;
+        return /[A-Za-z0-9_@.\/\\-]+\.[A-Za-z0-9]{1,8}:[0-9]{1,6}/.test(m[1]);
+      })()
+  - type: javascript
     value: 'output.includes(''"disposition": "needs_action"'') || output.includes(''"disposition":"needs_action"'')'
+
+# ── Citation-rule cases (added for umpire-bot#77) ────────────────────────────
+# Production (validateAndClassify) downgrades still_valid verdicts whose
+# evidence lacks a file:line citation. These cases verify the model emits one.
+
+- description: 'citation/1: still_valid needs_action — nil deref still present, evidence must cite file:line'
+  vars:
+    finding_id: '9900000001'
+    finding_path: internal/store/lease.go
+    finding_line: '88'
+    line_start: '84'
+    line_end: '104'
+    finding_created: '2026-09-01T00:00:00Z'
+    finding_body: '`renewLease` dereferences `lease.Expiry` without a nil check; a lease
+      removed by a concurrent `revoke` panics here.'
+    current_code: |
+      func (s *Store) renewLease(lease *Lease) error {
+      	s.mu.Lock()
+      	defer s.mu.Unlock()
+      	if time.Now().After(lease.Expiry) {
+      		return ErrLeaseExpired
+      	}
+      	lease.Expiry = time.Now().Add(leaseTTL)
+      	return nil
+      }
+    discussion: []
+  assert:
+  - type: javascript
+    value: 'output.includes(''"classification": "still_valid"'') || output.includes(''"classification":"still_valid"'')'
+  - type: javascript
+    value: |-
+      return (() => {
+        const m = output.match(/"evidence"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+        if (!m) return false;
+        return /lease\.go:[0-9]+/.test(m[1]);
+      })()
+
+- description: 'citation/2: fixed — guard added at anchor, no citation required'
+  vars:
+    finding_id: '9900000002'
+    finding_path: internal/store/lease.go
+    finding_line: '88'
+    line_start: '84'
+    line_end: '104'
+    finding_created: '2026-09-01T00:00:00Z'
+    finding_body: '`renewLease` dereferences `lease.Expiry` without a nil check; a lease
+      removed by a concurrent `revoke` panics here.'
+    current_code: |
+      func (s *Store) renewLease(lease *Lease) error {
+      	s.mu.Lock()
+      	defer s.mu.Unlock()
+      	if lease == nil {
+      		return ErrLeaseMissing
+      	}
+      	if time.Now().After(lease.Expiry) {
+      		return ErrLeaseExpired
+      	}
+      	lease.Expiry = time.Now().Add(leaseTTL)
+      	return nil
+      }
+    discussion:
+    - author: sdougbrown
+      body: '`👾 AI Agent` Fixed in 1a2b3c4. `renewLease` now returns
+        `ErrLeaseMissing` for a nil lease before touching `lease.Expiry`.'
+  assert:
+  - type: javascript
+    value: 'output.includes(''"classification": "fixed"'') || output.includes(''"classification":"fixed"'')'
+
+- description: 'citation/3: uncertain — anchor file does not exist, nothing to verify'
+  vars:
+    finding_id: '9900000003'
+    finding_path: internal/legacy/old_handler.py
+    finding_line: '42'
+    finding_created: '2026-09-01T00:00:00Z'
+    finding_body: 'The legacy handler retries without backoff and can hammer the
+      upstream service.'
+    file_exists: 'does NOT exist'
+    current_code: ''
+    discussion: []
+  assert:
+  - type: javascript
+    value: 'output.includes(''"classification": "uncertain"'') || output.includes(''"classification":"uncertain"'') || output.includes(''"classification": "obsolete"'') || output.includes(''"classification":"obsolete"'')'
+
+- description: 'citation/4: still_valid — error string mismatch still present, must cite the line'
+  vars:
+    finding_id: '9900000004'
+    finding_path: internal/api/router.go
+    finding_line: '201'
+    line_start: '197'
+    line_end: '217'
+    finding_created: '2026-09-01T00:00:00Z'
+    finding_body: 'The 404 body says "resource not found" but the API contract
+      documents `"not_found"` — clients matching on the exact string break.'
+    current_code: |
+      func (s *Router) notFound(w http.ResponseWriter, r *http.Request) {
+      	w.Header().Set("Content-Type", "application/json")
+      	w.WriteHeader(http.StatusNotFound)
+      	_, _ = w.Write([]byte(`{"error": "resource not found"}`))
+      }
+    discussion: []
+  assert:
+  - type: javascript
+    value: 'output.includes(''"classification": "still_valid"'') || output.includes(''"classification":"still_valid"'')'
+  - type: javascript
+    value: |-
+      return (() => {
+        const m = output.match(/"evidence"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+        if (!m) return false;
+        return /router\.go:[0-9]+/.test(m[1]);
+      })()
