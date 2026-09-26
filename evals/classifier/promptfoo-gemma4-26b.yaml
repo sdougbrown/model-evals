@@ -1,4 +1,4 @@
-# Classifier eval — gemma4 e4b only
+# Classifier eval — gemma4 26b (gateway model id "gemma4") only
 description: "Classifier: finding re-classification (fixed / still_valid + disposition)"
 
 evaluateOptions:
@@ -6,7 +6,7 @@ evaluateOptions:
 
 providers:
   - id: openai:chat:gemma4
-    label: gemma4 (e4b)
+    label: gemma4 (26b)
     config:
       apiBaseUrl: "http://localhost:4000/v1"
       apiKey: none
