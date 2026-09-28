@@ -1,6 +1,9 @@
 # model-evals
 
-Compare local model candidates (currently: qwen-moe vs nex-mini) via [promptfoo](https://promptfoo.dev).
+Compare local model candidates via [promptfoo](https://promptfoo.dev) — code-output reasoning,
+bug-spotting, PR review, and finding-classification evals against models served through a local
+LiteLLM gateway (plus a couple of custom encoder providers). Results and cross-model summaries
+live in `results/`.
 
 > **Note:** this repo is for my own personal use, so config files reference machines on my home
 > LAN by hostname (`rocky`, `rusty`, `bitey`, `sparky`) and private addresses like `10.0.0.2`.
@@ -10,10 +13,16 @@ Compare local model candidates (currently: qwen-moe vs nex-mini) via [promptfoo]
 
 ```
 evals/
+  cruxeval/       Code-output reasoning (pass@1)
   pr-review/      LLM-as-judge: does the model catch real bugs in real diffs?
+  classifier/     Finding re-classification: chat models vs GLiNER2/Laya encoders
   code-gen/       Deterministic + rubric: instruct mode, thinking disabled
-providers/
-  local.yaml      Gateway routes for all local model variants
+  bugfinding/     QuixBugs bug-spotting: execute the model's own fix against the test suite
+benchmarks/       Standalone scripts: long-context needle retrieval, gateway load testing
+providers/        Local gateway routes + custom GLiNER2/Laya providers
+results/          Raw promptfoo output + per-session summaries (SUMMARY.md, MASTER.md)
+scripts/          Eval/training helpers (quixbugs runner, corpus builders, judges)
+data/             Eval inputs, vendored corpora, classification harvests (gitignored)
 ```
 
 ## Setup
@@ -40,8 +49,10 @@ promptfoo view
 ## evals
 
 - `cruxeval/` — code-output reasoning: `promptfoo-nemotron-full.yaml` (nemotron, 50 tests), `promptfoo-qwen.yaml` (qwen dense 27B, think/no-think/code)
-- `classifier/` — finding re-classification: `promptfoo-qwen.yaml`, `promptfoo-nemotron.yaml`
+- `classifier/` — finding re-classification: `promptfoo-qwen.yaml`, `promptfoo-nemotron.yaml`, `promptfoo-gemma4-*.yaml`, plus GLiNER2/Laya encoder variants
+- `pr-review/` — LLM-as-judge over real PR diffs from my own repos (see below)
 - `bugfinding/` — QuixBugs bug-spotting (self-contained)
+- `code-gen/` — deterministic + rubric assertions, thinking disabled
 
 ## Bug-finding eval (QuixBugs)
 
