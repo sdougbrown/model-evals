@@ -1,5 +1,5 @@
 .venv/
-__pyxache__/
+__pycache__/
 evals/cruxeval/tests.yaml
 evals/pr-review/testdata/*.diff
 __pycache__/

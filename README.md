@@ -2,6 +2,10 @@
 
 Compare local model candidates (currently: qwen-moe vs nex-mini) via [promptfoo](https://promptfoo.dev).
 
+> **Note:** this repo is for my own personal use, so config files reference machines on my home
+> LAN by hostname (`rocky`, `rusty`, `bitey`, `sparky`) and private addresses like `10.0.0.2`.
+> Those names won't resolve anywhere but my network.
+
 ## Structure
 
 ```
